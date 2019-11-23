@@ -1,0 +1,48 @@
+body{
+    margin:0px;
+    padding:0px;
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+}
+
+#message{
+    margin:5px;
+}
+
+#logo-image{
+    width:100px;
+}
+
+.component {
+    margin:5px;
+    border-top:1px solid #000;
+}
+
+.component-header {
+    font-size:18px;
+    font-weight:bold;
+}
+
+.note {
+    display:inline-block;
+    color:#999;
+    font-size:12px;
+    padding:0px 0px 5px 5px;
+}
+
+.component label{
+    padding-right:3px;
+}
+
+.markdown-body {
+    box-sizing: border-box;
+    min-width: 200px;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 45px;
+}
+
+@media (max-width: 767px) {
+    .markdown-body {
+        padding: 15px;
+    }
+}

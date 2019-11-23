@@ -1,0 +1,6 @@
+indexes:
+
+- kind: PublishKey
+  properties:
+  - name: username
+  - name: created
