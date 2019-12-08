@@ -1,21 +1,23 @@
-# wombat-dressing-room
+# Wombat Dressing Room
 
 This is an npm registry proxy designed to reduce the attack surface of npm publish and google packages.
 
 `npm publish`es are made from a single npm account with 2fa enabled.
 
-`npm publish`es can be made using the npm cli just using this service as the registry. see the [Documentation](docs/usage.md) for information about how to use this service.
+`npm publish`es can be made using the npm CLI just using this service as the registry. see the [Documentation](docs/usage.md) for information about how to use this service.
 
-
-# deployment
+# Deployment
 
 This service is deployed in 2 distinct App Engine accounts; an external account for registry access, and a protected internal account for authentication.
 
-# setup
+_TODO: flesh this section out with documentation on how a non Googler can create
+a protected proxy for their registry._
+
+# Setup
 
 To run a copy of this service yourself.
 
-## install
+## Install
 
 `npm install`
 
@@ -23,51 +25,34 @@ To run a copy of this service yourself.
 
 wombat-dressing-room uses [dotenv](https://www.npmjs.com/package/dotenv) for configuration.
 
-In order to start this service in development you need to create a `local.env`, in order to deploy you'll need an `external.env` and `internal.env` file at the root of the project.
+In order to start this service in development you need to create a `local.env`, in order to deploy you'll need an `config/external.env` and `config/internal.env` inside
+your project.
 
-Set the following environment variables to enable these configurations:
+### Local environment variables
 
-* `INTERNAL_ENV_PATH`: path to environment file used to configure login server.
-* `EXTERNAL_ENV_PATH`: path to environment file used to configure npm proxy.
-* `DATASTORE_PROJECT_ID`: ID of project to write datastore indices to.
+The local environment just runs a single process on `http://localhost:8080` it needs the path to your service account keys, a GitHub OAuth application, and npm credentials.
 
-### Local Environment Variables
-
-the local environment just runs a single process on `http://localhost:8080` it needs the path to your service account keys, a github oauth application, and npm credentials 
-
-```sh
-GOOGLE_APPLICATION_CREDENTIALS={path to json. only needed in development}
-NPM_OTP_SECRET={the text value of the otp secret}
-NPM_TOKEN={the npm token}
-GITHUB_CLIENT_ID={github app id}
-GITHUB_CLIENT_SECRET={github app secret}
-DATASTORE_PROJECT_ID={your pantheon project id. DEFAULT: wombat-dressing-room}
-LOGIN_ENABLED=yes-this-is-a-login-server
-LOGIN_URL=http://localhost:8080
-REGISTRY_URL=http://localhost:8080
-```
-
-### Internal Environment Variables
+### Internal environment variables
 
 ```
 NPM_OTP_SECRET={the text value of the otp secret}
 NPM_TOKEN={the npm token}
 GITHUB_CLIENT_ID={github app id}
 GITHUB_CLIENT_SECRET={github app secret}
-DATASTORE_PROJECT_ID={your pantheon project id. DEFAULT: wombat-dressing-room}
+DATASTORE_PROJECT_ID={your pantheon project id}
 LOGIN_ENABLED=yes-this-is-a-login-server
 LOGIN_URL=https://protected-login-url
 REGISTRY_URL=https://public-registry-url
 ```
 
-### External Environment Variables
+### External environment variables
 
 ```
 NPM_OTP_SECRET={the text value of the otp secret}
 NPM_TOKEN={the npm token}
 GITHUB_CLIENT_ID={github app id}
 GITHUB_CLIENT_SECRET={github app secret}
-DATASTORE_PROJECT_ID={your pantheon project id. DEFAULT: wombat-dressing-room}
+DATASTORE_PROJECT_ID={your pantheon project id}
 LOGIN_ENABLED=this-is-not-enabled
 LOGIN_URL=https://protected-login-url
 REGISTRY_URL=https://public-registry-url
@@ -81,7 +66,7 @@ local development config. uses local.env.
 
 # Stage
 
-there is no stage! this should be fixed.
+There is no stage! this should be fixed.
 
 ## Release
 

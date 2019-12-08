@@ -40,7 +40,7 @@ export const config = {
   userRegistryUrl: process.env.REGISTRY_URL,
   // if users should be able to login.
   loginEnabled: process.env.LOGIN_ENABLED === 'yes-this-is-a-login-server',
-  projectId: process.env.DATASTORE_PROJECT_ID || 'wombat-dressing-room'
+  projectId: process.env.DATASTORE_PROJECT_ID
 };
 
 if (!config.githubId || !config.githubSecret) {
