@@ -45,7 +45,7 @@ const readStatic = (p: string) => {
 const ghcss =
     fs.readFileSync(require.resolve('github-markdown-css/github-markdown.css'));
 const favicon = readStatic('favicon.ico');
-const documentation = readStatic('documentation.html') + '';
+//const documentation = readStatic('documentation.html') + '';
 const appjs = readStatic('app.js');
 const css = readStatic('app.css');
 const loginPage = readStatic('login.html') + '';
@@ -56,7 +56,7 @@ const SUFFIX_STRING = '_ns';
 
 let indexHtml = readStatic('index.html') + '';
 // add documentation from rendered markdown
-indexHtml = indexHtml.replace('{documentation}', documentation);
+indexHtml = indexHtml.replace('{documentation}', '');// documentation);
 
 const uuidregex =
     /[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/ig;
