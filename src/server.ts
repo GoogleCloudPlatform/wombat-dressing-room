@@ -627,6 +627,7 @@ app.get('/_/token-settings', wrap(async (req, res) => {
           }
 
           res.header('content-type', 'text/html');
+          res.header('x-frame-options','deny');
           res.end(tokenSettingsPage);
         }));
 
@@ -647,6 +648,7 @@ app.get('/_/manage-tokens', wrap(async (req, res) => {
           let page = manageTokensPage + '';
           page = page.replace('{username}', req.session!.user.login);
 
+          res.header('x-frame-options','deny');
           res.header('content-type', 'text/html');
           res.end(page);
         }));
