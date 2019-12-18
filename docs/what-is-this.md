@@ -2,14 +2,14 @@
 
 I'm excited to announce that we're open-sourcing the proxy we use on the 
 Google Cloud Client Libraries team for handling npm publications, it's called
-[Wombat Dressing Room]. Wombat Dressing Room provides features that
+[Wombat Dressing Room][wombat-dressing-room]. Wombat Dressing Room provides features that
 help npm work better with automation, without fully sacrificing security.
 
 ## A tradeoff folks often make
 
 npm has top notch security features: CIDR-range restricted tokens,
 publication notfications, two-factor authentication... Of these, a feature
-critical to protecting publications is two-factor authentication (2FA).
+critical to protecting publications is [two-factor authentication (2FA)][two-factor-auth].
 
 2FA requires that you provide two pieces of information when accessing a protected
 resource: _"something you know"_ (_for instance, a password_); and _"something
@@ -19,7 +19,7 @@ password is exposed, an attacker still can't publish a malicious packages
 
 On my team, a small number of developers manage 75+ Node.js libraries. We see
 automation as key to making this possible: we've written tools that automate
-releases, tools that validate license headers, tools that ensure contributors
+releases, validate license headers, ensure contributors
 have signed CLAs; we adhere to the philosophy, _automate all the things!_
 
 > It's difficult to automate the step of entering a code off a
@@ -51,7 +51,7 @@ hour lifespan is hit, reducing the attack surface.
 
 ### GitHub for 2FA
 
-In this authentication model, can only be published to npm if a GitHub release
+In this authentication model, a package can only be published to npm if a GitHub release
 with the same version number is found on GitHub.
 
 This introduces a true "second factor", as users must prove
@@ -68,6 +68,9 @@ on getting it up and running can be found in its [README.md] and in [docs/usage.
 
 It's my hope that this will help other folks in the community simplify,
 and automate their release process, while minimizing the attack surface of
-their packages,
+their packages.
 
 -- Ben.
+
+[two-factor-auth]: https://en.wikipedia.org/wiki/Multi-factor_authentication
+[wombat-dressing-room]: https://github.com/GoogleCloudPlatform/wombat-dressing-room

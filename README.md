@@ -1,6 +1,6 @@
 # Wombat Dressing Room
 
-This is an npm registry proxy designed to reduce the attack surface of npm publish and google packages.
+This is an npm registry proxy designed to reduce the attack surface of npm packages.
 
 `npm publish`es are made from a single npm account with 2fa enabled.
 
@@ -39,7 +39,7 @@ NPM_OTP_SECRET={the text value of the otp secret}
 NPM_TOKEN={the npm token}
 GITHUB_CLIENT_ID={github app id}
 GITHUB_CLIENT_SECRET={github app secret}
-DATASTORE_PROJECT_ID={your pantheon project id}
+DATASTORE_PROJECT_ID={your project id}
 LOGIN_ENABLED=yes-this-is-a-login-server
 LOGIN_URL=https://protected-login-url
 REGISTRY_URL=https://public-registry-url
@@ -52,7 +52,7 @@ NPM_OTP_SECRET={the text value of the otp secret}
 NPM_TOKEN={the npm token}
 GITHUB_CLIENT_ID={github app id}
 GITHUB_CLIENT_SECRET={github app secret}
-DATASTORE_PROJECT_ID={your pantheon project id}
+DATASTORE_PROJECT_ID={your project id}
 LOGIN_ENABLED=this-is-not-enabled
 LOGIN_URL=https://protected-login-url
 REGISTRY_URL=https://public-registry-url
