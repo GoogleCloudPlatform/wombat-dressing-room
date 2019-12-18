@@ -23,7 +23,6 @@ import * as os from 'os';
 require('dotenv').config('../.env');
 
 export const config = {
-  bucket: process.env.BUCKET,
   credentials: process.env.GOOGLE_APPLICATION_CREDENTIALS,
   sessionSecret: process.env.SESSION_SECRET || null,
   totpSecret: process.env.NPM_OTP_SECRET || '',

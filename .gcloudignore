@@ -19,5 +19,6 @@ node_modules/
 local.env
 external.env
 prod.env
+functions.env
 
 .vscode

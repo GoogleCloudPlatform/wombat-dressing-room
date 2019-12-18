@@ -4,7 +4,7 @@
   "repository": "googleapis/wombat-dressing-room",
   "version": "0.0.1",
   "description": "npm registry proxy designed to reduce the attack surface of npm publish",
-  "main": "index.js",
+  "main": "./build/src/function.js",
   "scripts": {
     "start": "node -r source-map-support/register build/src/server.js",
     "start-local": "cp local.env ./.env && npm run compile &&  npm start",
