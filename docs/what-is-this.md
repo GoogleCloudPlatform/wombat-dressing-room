@@ -73,6 +73,6 @@ their packages.
 -- Ben.
 
 [authenticator]: https://en.wikipedia.org/wiki/Google_Authenticator
-[readme][https://github.com/GoogleCloudPlatform/wombat-dressing-room/blob/master/README.md]
+[readme]: [https://github.com/GoogleCloudPlatform/wombat-dressing-room/blob/master/README.md]
 [two-factor-auth]: https://en.wikipedia.org/wiki/Multi-factor_authentication
 [wombat-dressing-room]: https://github.com/GoogleCloudPlatform/wombat-dressing-room
