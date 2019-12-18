@@ -115,12 +115,11 @@ export const require2fa = (packageName: string, token: string, otpCode: string):
         'content-type': 'application/json',
         'content-length': toWrite.length,
         'npm-otp': otpCode,
-        'npm-session': 'e7af7de30c9072fb',  // Date.now().toString(36),
-        'user-agent': 'npm/6.4.1 node/v10.13.0 linux x64',
+        'npm-session': Date.now().toString(36),
+        'user-agent': 'wombat-dressing-room',
         'version': '6.4.1',
         'accept-encoding': 'gzip',
-        'npm-in-ci': 'false',
-        'npm-scope': '@soldair-robot'
+        'npm-in-ci': 'false'
       }
     });
 
