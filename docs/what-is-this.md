@@ -13,7 +13,7 @@ critical to protecting publications is [two-factor authentication (2FA)][two-fac
 
 2FA requires that you provide two pieces of information when accessing a protected
 resource: _"something you know"_ (_for instance, a password_); and _"something
-you have"_ (_for instance, a code from an [authenticator app]_). With 2FA, if your
+you have"_ (_for instance, a code from an [authenticator app][authenticator]_). With 2FA, if your
 password is exposed, an attacker still can't publish a malicious packages
 (unless they also steal the _"something you have"_.)
 
@@ -26,7 +26,7 @@ have signed CLAs; we adhere to the philosophy, _automate all the things!_
   cellphone. As a result, folks often opt to turn off 2FA in their automation.
 
 What if you could have both automation and the added security of 2FA? 
-This is what we built [Wombat Dressing Room] for...
+This is what we built [Wombat Dressing Room][wombat-dressing-room] for...
 
 ## A different approach to authentication
 
@@ -64,7 +64,7 @@ working great for our publication process. As of today, the source
 available for everyone on GitHub under an Apache 2.0 license.
 
 Wombat Dressing Room runs on Google App Engine, and instructions
-on getting it up and running can be found in its [README.md] and in [docs/usage.md]
+on getting it up and running can be found in its [README.md][readme] and in [docs/usage.md][https://github.com/GoogleCloudPlatform/wombat-dressing-room/blob/master/docs/usage.md].
 
 It's my hope that this will help other folks in the community simplify,
 and automate their release process, while minimizing the attack surface of
@@ -72,5 +72,7 @@ their packages.
 
 -- Ben.
 
+[authenticator]: https://en.wikipedia.org/wiki/Google_Authenticator
+[readme][https://github.com/GoogleCloudPlatform/wombat-dressing-room/blob/master/README.md]
 [two-factor-auth]: https://en.wikipedia.org/wiki/Multi-factor_authentication
 [wombat-dressing-room]: https://github.com/GoogleCloudPlatform/wombat-dressing-room
