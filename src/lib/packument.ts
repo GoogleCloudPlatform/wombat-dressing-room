@@ -95,33 +95,17 @@ export const setRegistryUrl = (url: string) => {
 
 export const require2fa = (packageName: string, token: string, otpCode: string):
     Promise<{status: number, data: Buffer} >=> {
-  /*
-  /-/package/soldair-dressing-room/access
-  { 'accept-encoding': 'gzip',
-  authorization: 'Bearer ----',
-  version: '6.4.1',
-  accept: 'application/json',
-  referer: 'access 2fa-required soldair-dressing-room',
-  'npm-session': 'abc123',
-  'npm-in-ci': 'false',
-  'user-agent': 'npm/6.4.1 node/v10.13.0 linux x64',
-  'npm-scope': '@beef',
-  'content-type': 'application/json',
-  'content-length': '29',
-  host: 'localhost:8080',
-  connection: 'keep-alive' }
-  {"publish_requires_tfa":true}
-  */
-
   let ended = false;
 
   return new Promise((resolve, reject) => {
     console.log(packageName);
     const cleanPackageName =
-        encodeURIComponent(packageName);  ////.replace('/', '%2f')
+        encodeURIComponent(packageName);
 
     const url = registryUrl + '/-/package/' + cleanPackageName + '/access';
     const toWrite = '';
+    // TODO(@ssoldair): investigate whether there's a way to not have this
+    // tied to a prior session and your robot scope?
     const req = request(url, {
       method: 'POST',
       headers: {
