@@ -64,7 +64,7 @@ working great for our publication process. As of today, the source
 available for everyone on GitHub under an Apache 2.0 license.
 
 Wombat Dressing Room runs on Google App Engine, and instructions
-on getting it up and running can be found in its [README.md][readme] and in [docs/usage.md][https://github.com/GoogleCloudPlatform/wombat-dressing-room/blob/master/docs/usage.md].
+on getting it up and running can be found in its [README.md][readme] and in [docs/usage.md][usage].
 
 It's my hope that this will help other folks in the community simplify,
 and automate their release process, while minimizing the attack surface of
@@ -75,4 +75,5 @@ their packages.
 [authenticator]: https://en.wikipedia.org/wiki/Google_Authenticator
 [readme]: [https://github.com/GoogleCloudPlatform/wombat-dressing-room/blob/master/README.md]
 [two-factor-auth]: https://en.wikipedia.org/wiki/Multi-factor_authentication
+[usage]: https://github.com/GoogleCloudPlatform/wombat-dressing-room/blob/master/docs/usage.md
 [wombat-dressing-room]: https://github.com/GoogleCloudPlatform/wombat-dressing-room
