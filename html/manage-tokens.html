@@ -164,28 +164,72 @@
 
             let tokensList = document.getElementById('tokens-list')
             if(state.tokens.error){
-                tokensList.innerHTML = "error loading tokens. please <a href='javascript:window.location.reload()'>refresh</a> to try again."
+                tokensList.innerText = "error loading tokens.";
+                let link = document.createElement('a')
+                link.href = 'javascript:window.location.reload()';
+                link.appendChild = document.createTextNode("please refresh to try again.");
+                tokensList.appendChild(link)
                 return;
             }
 
-            let output = `<table>
-                <tr>
-                    <th>key</th><th>package</th><th>created</th><th>expires</th><th>actions</th>
-                </tr>
-            `
-            state.tokens.forEach((tokenInfo) => {
-                output += `<tr>
-                    <td>${tokenInfo.prefix}...</td>
-                    <td>${tokenInfo.package||'all packages'}</td>
-                    <td>${new Date(tokenInfo.created).toJSON()}</td>
-                    <td>${tokenInfo.expiration?new Date(tokenInfo.expiration).toJSON():'<span style="color:#999;">never</span>'}</td>
-                    <td><a class="token-delete" href="#created=${tokenInfo.created}&prefix=${tokenInfo.prefix}">delete</a></td>
-                </tr>
-                `
-            });
-            
-            output += "</table>"
-            tokensList.innerHTML = output
+            let table = tableize(state.tokens,['prefix','package','created','expires','actions'],(row,k,td)=>{
+              switch(k){
+                
+                case "expires":
+                  if(row.expiration){
+                    td.innerText = new Date(row.expiration).toJSON();
+                  } else {
+                    let span = document.createElement('span')
+                    span.style = 'color:#999';
+                    span.appendChild(document.createTextNode('never'))
+                    td.appendChild(span)
+                  }
+                  break;
+                case "created":
+                  td.innerText = new Date(row[k]).toJSON()
+                  break;
+                case "package":
+                  td.innerText = row[k]||'all packages';
+                  break;
+                case "prefix":
+                  td.innerText = ""+row[k]+'...'
+                  break;
+                case "actions":
+                  let link = document.createElement('a')
+                  link.setAttribute('class','token-delete')
+                  link.href = "#created="+encodeURIComponent(row.created)+"&prefix="+encodeURIComponent(row.prefix);
+                  link.appendChild(document.createTextNode('delete'))
+                  td.appendChild(link)
+                  break;
+                default:
+                  td.innerText = ""+row[k]
+              }
+              return td;
+            })
+            tokensList.innerHTML = "";
+            tokensList.appendChild(table)
+        }
+
+        function tableize(rows,keys,map){
+          let table = document.createElement('table')
+          let headRow = document.createElement('tr')
+          keys.forEach((k)=>{
+            let th = document.createElement('th')
+            th.innerText = k;
+            table.appendChild(th);
+          })
+          table.appendChild(headRow);
+
+          rows.forEach((row)=>{
+            let tr = document.createElement('tr')
+            keys.forEach((k)=>{
+              let td = document.createElement('td')
+              map(row,k,td)
+              tr.appendChild(td)
+            })
+            table.appendChild(tr)
+          })
+          return table;
         }
 
         function renderError(){
