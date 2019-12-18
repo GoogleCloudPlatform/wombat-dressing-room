@@ -370,17 +370,20 @@ app.put(/^\/[^\/]+$/, wrap(async (req, res) => {
 // PUT
 // https://wombat-dressing-room.appspot.com/-/package/soldair-test-package/dist-tags/latest
 
-app.put('/-/package/:package/dist-tags/:tag', wrap(async (req, res) => {
-          const result = await writePackage(
-              decodeURIComponent(req.params.package), req, res);
-          // the request has not been ended yet if there has been a wombat
-          // error.
-          if (result.error) {
-            console.log('create dist tag error ', req.url, result);
-          } else {
-            console.log('');
-          }
-        }));
+const putDeleteTag = wrap(async (req, res) => {
+  const result = await writePackage(
+      decodeURIComponent(req.params.package), req, res);
+  // the request has not been ended yet if there has been a wombat
+  // error.
+  if (result.error) {
+    console.log('create dist tag error ', req.url, result);
+  } else {
+    console.log('');
+  }
+});
+
+app.put('/-/package/:package/dist-tags/:tag', putDeleteTag);
+app.delete('/-/package/:package/dist-tags/:tag', putDeleteTag);
 
 app.post('/_/2fa', wrap(async (req, res) => {
            const packageName = req.query.packageName || '';
@@ -469,12 +472,6 @@ app.get('/-/package/:package/dist-tags', (req, res) => {
   request('https://registry.npmjs.org' + req.url).pipe(res);
 });
 
-// for the moment we'll disallow dit tag putting.
-// we need to fetch the packument and verify repo permissions just like publish.
-app.put('/-/package/:package/dist-tags/:tag', (req, res) => {
-  res.statusCode = 405;
-  res.end('{}');
-});
 
 // web --------------------------------
 app.use(cookieSession({
