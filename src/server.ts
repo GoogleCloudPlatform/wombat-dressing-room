@@ -33,6 +33,15 @@ import {Packument} from '@npm/types';
 import {json} from './lib/json';
 const validatePackage = require('validate-npm-package-name');
 
+class WombatServerError extends Error {
+  statusCode: number;
+  statusMessage: string;
+  constructor(msg: string, statusCode = 500) {
+    super(msg);
+    this.statusCode = statusCode;
+    this.statusMessage = msg;
+  }
+}
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
 const unsafe = require('./lib/unsafe.js');
@@ -147,6 +156,7 @@ const writePackage = async(
     return ret;
   }
 
+
   // get the client github user token with pubKey.username
   const user = await datastore.getUser(pubKey.username);
   if (!user) {
@@ -158,8 +168,6 @@ const writePackage = async(
     res.end(ret.error);
     return ret;
   }
-
-
 
   console.log(
       'attempting to publish package ' + packageName +
@@ -276,7 +284,6 @@ const writePackage = async(
   try {
     repoResp = await github.getRepo(repo.name, user.token);
   } catch (e) {
-    // res.status(400);
     const ret = {
       error: formatError(
           'respository ' + repo.url + ' doesnt exist or ' + user.name +
@@ -311,6 +318,23 @@ const writePackage = async(
     };
     res.end(ret.error);
     return ret;
+  }
+
+  // If the publication key has been configured with GitHub releases as a
+  // second factor of authentication, we verify that the version being published
+  // in the new packument aligns with the latest release created on GitHub:
+  if (pubKey.releaseAs2FA) {
+    drainedBody = await drainRequest(req);
+    try {
+      await enforceMatchingRelease(
+          repo.name, user.token, drainedBody, req, res);
+    } catch (e) {
+      res.statusCode = e.statusCode;
+      res.statusMessage = e.statusMessage;
+      const ret = {error: formatError(e.statusMessage), statusCode: 400};
+      res.end(ret.error);
+      return ret;
+    }
   }
 
   // update auth information to be the publish user.
@@ -348,6 +372,32 @@ const writePackage = async(
   });
 };
 
+/*
+ * Throws an exception if a matching GitHub release cannot be found for the
+ * packument that is being published to npm.
+ */
+async function enforceMatchingRelease(
+    repoName: string, token: string, drainedBody: Buffer, req: express.Request,
+    res: express.Response) {
+  try {
+    const packument = JSON.parse(drainedBody + '') as Packument;
+    const latest = packument.versions[packument['dist-tags'].latest || ''];
+    const releaseTags = await github.getReleaseTags(repoName, token);
+    const hasMatchingRelease = releaseTags.some((t) => {
+      return t === latest.version;
+    });
+    if (!hasMatchingRelease) {
+      const msg = `matching release not found for ${repoName}`;
+      throw new WombatServerError(msg, 400);
+    }
+  } catch (err) {
+    if (err.statusCode && err.statusMessage) throw err;
+    err.statusCode = 401;
+    err.statusMessage = 'failed to find corresponding release';
+    throw err;
+  }
+}
+
 app.put(/^\/[^\/]+$/, wrap(async (req, res) => {
           const plainPackageName = req.url.substr(1);
           const packageName = decodeURIComponent(plainPackageName);
@@ -371,8 +421,8 @@ app.put(/^\/[^\/]+$/, wrap(async (req, res) => {
 // https://wombat-dressing-room.appspot.com/-/package/soldair-test-package/dist-tags/latest
 
 const putDeleteTag = wrap(async (req, res) => {
-  const result = await writePackage(
-      decodeURIComponent(req.params.package), req, res);
+  const result =
+      await writePackage(decodeURIComponent(req.params.package), req, res);
   // the request has not been ended yet if there has been a wombat
   // error.
   if (result.error) {
@@ -593,8 +643,11 @@ app.get(
       }
 
       let ttl = undefined;
+      let releaseAs2FA = undefined;
       if (req.query.type === 'ttl') {
         ttl = Date.now() + ONE_DAY;
+      } else if (req.query.type === 'release') {
+        releaseAs2FA = true;
       } else if (!req.query.package || !req.query.package.trim().length) {
         res.statusCode = 400;
         return res.end('"package name required."');
@@ -607,7 +660,7 @@ app.get(
           datastore.savePublishKey(
               req.session!.user.login, handoff.value,
               req.query.package ? (req.query.package + '').trim() : undefined,
-              ttl),
+              ttl, releaseAs2FA),
           datastore.completeHandoffKey(req.query.ott + '')
         ]);
         res.header('content-type', 'text/html');
@@ -624,7 +677,7 @@ app.get('/_/token-settings', wrap(async (req, res) => {
           }
 
           res.header('content-type', 'text/html');
-          res.header('x-frame-options','deny');
+          res.header('x-frame-options', 'deny');
           res.end(tokenSettingsPage);
         }));
 
@@ -645,7 +698,7 @@ app.get('/_/manage-tokens', wrap(async (req, res) => {
           let page = manageTokensPage + '';
           page = page.replace('{username}', req.session!.user.login);
 
-          res.header('x-frame-options','deny');
+          res.header('x-frame-options', 'deny');
           res.header('content-type', 'text/html');
           res.end(page);
         }));

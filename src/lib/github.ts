@@ -21,6 +21,10 @@ const gh = require('octonode');
 
 let clientOptions: {}|undefined;
 
+interface GHRelease {
+  tag_name: string;
+}
+
 /**
  * https://developer.github.com/v3/repos/#get
  * @param name repository name including username. ex: node/node or bcoe/yargs
@@ -47,6 +51,30 @@ export const getRepo = (name: string, token: string): Promise<GhRepo> => {
         reject(err);
       }
       resolve(data);
+    });
+  });
+};
+
+/**
+ * https://developer.github.com/v3/repos/releases/#list-releases-for-a-repository
+ * @param name repository name including username. ex: node/node or bcoe/yargs
+ * @param token
+ *
+ * @returns string[] tag names of releases.
+ */
+export const getReleaseTags =
+    (name: string, token: string): Promise<string[]> => {
+  return new Promise((resolve, reject) => {
+    const client = gh.client(token, clientOptions);
+
+    client.repo(name).releases((err: Error, releases: GHRelease[]) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(releases.map((r) => {
+          return r.tag_name;
+        }));
+      }
     });
   });
 };

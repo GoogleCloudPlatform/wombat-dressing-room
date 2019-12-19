@@ -107,7 +107,7 @@ export const getHandoffKey =
 
 export const savePublishKey = async(
     username: string, publishKey: string, packageName?: string,
-    expiration?: number): Promise<{}> => {
+    expiration?: number, releaseAs2FA?: boolean): Promise<{}> => {
   if (!config.loginEnabled) {
     return Promise.reject(new Error('disabled on this server.'));
   }
@@ -124,7 +124,8 @@ export const savePublishKey = async(
       username,
       created: Date.now(),
       package: packageName,
-      expiration
+      expiration,
+      releaseAs2FA
     }
   });
 };
@@ -227,6 +228,7 @@ interface PublishKey {
   created: number;
   package?: string;
   expiration?: number;
+  releaseAs2FA?: boolean;
 }
 
 interface UserMain {

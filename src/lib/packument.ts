@@ -99,8 +99,7 @@ export const require2fa = (packageName: string, token: string, otpCode: string):
 
   return new Promise((resolve, reject) => {
     console.log(packageName);
-    const cleanPackageName =
-        encodeURIComponent(packageName);
+    const cleanPackageName = encodeURIComponent(packageName);
 
     const url = registryUrl + '/-/package/' + cleanPackageName + '/access';
     const toWrite = '';
