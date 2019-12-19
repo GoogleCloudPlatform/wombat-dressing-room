@@ -17,10 +17,10 @@
     "prepare": "npm run compile",
     "pretest": "npm run compile",
     "posttest": "npm run check",
-    "internal-deploy": "cp config/internal.env .env && source .env && gcloud app deploy --project $PROJECT",
-    "external-deploy": "cp config/external.env .env && source .env && gcloud app deploy --project $PROJECT",
+    "internal-deploy": "cp config/internal.env .env && gcloud app deploy app-internal.yaml --project $GCLOUD_PROJECT",
+    "external-deploy": "cp config/external.env .env && gcloud app deploy app-external.yaml --project $GCLOUD_PROJECT",
     "deploy": "npm run compile && npm run internal-deploy && npm run external-deploy",
-    "create-indexes": "gcloud --project $PROJECT datastore indexes create ./index.yaml",
+    "create-indexes": "gcloud --project $GCLOUD_PROJECT datastore indexes create ./index.yaml",
     "docs-test": "echo 'add doc tests'",
     "samples-test": "echo 'add samples test'",
     "system-test": "echo 'add system test'"
