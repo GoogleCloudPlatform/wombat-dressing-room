@@ -64,20 +64,20 @@ export const getRepo = (name: string, token: string): Promise<GhRepo> => {
  */
 export const getReleaseTags =
     (name: string, token: string): Promise<string[]> => {
-  return new Promise((resolve, reject) => {
-    const client = gh.client(token, clientOptions);
+      return new Promise((resolve, reject) => {
+        const client = gh.client(token, clientOptions);
 
-    client.repo(name).releases((err: Error, releases: GHRelease[]) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(releases.map((r) => {
-          return r.tag_name;
-        }));
-      }
-    });
-  });
-};
+        client.repo(name).releases((err: Error, releases: GHRelease[]) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(releases.map((r) => {
+              return r.tag_name;
+            }));
+          }
+        });
+      });
+    };
 
 /**
  * calls github's "get a single user api" for a user token

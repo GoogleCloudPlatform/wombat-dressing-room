@@ -324,6 +324,7 @@ const writePackage = async(
   // second factor of authentication, we verify that the version being published
   // in the new packument aligns with the latest release created on GitHub:
   if (pubKey.releaseAs2FA) {
+    console.info('token uses releases as 2FA');
     drainedBody = await drainRequest(req);
     try {
       await enforceMatchingRelease(
@@ -383,8 +384,10 @@ async function enforceMatchingRelease(
     const packument = JSON.parse(drainedBody + '') as Packument;
     const latest = packument.versions[packument['dist-tags'].latest || ''];
     const releaseTags = await github.getReleaseTags(repoName, token);
+    console.info(`new version = ${latest.version}`);
+    console.info('tags = ', releaseTags);
     const hasMatchingRelease = releaseTags.some((t) => {
-      return t === latest.version;
+      return t === `v${latest.version}`;
     });
     if (!hasMatchingRelease) {
       const msg = `matching release not found for ${repoName}`;
