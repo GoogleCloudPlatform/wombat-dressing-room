@@ -10,9 +10,6 @@ This is an npm registry proxy designed to reduce the attack surface of npm packa
 
 This service is deployed in 2 distinct App Engine accounts; an external account for registry access, and a protected internal account for authentication.
 
-_TODO: flesh this section out with documentation on how a non Googler can create
-a protected proxy for their registry._
-
 # Setup
 
 To run a copy of this service yourself.
@@ -28,10 +25,6 @@ wombat-dressing-room uses [dotenv](https://www.npmjs.com/package/dotenv) for con
 In order to start this service in development you need to create a `local.env`, in order to deploy you'll need an `config/external.env` and `config/internal.env` inside
 your project.
 
-### Local environment variables
-
-The local environment just runs a single process on `http://localhost:8080` it needs the path to your service account keys, a GitHub OAuth application, and npm credentials.
-
 ### Internal environment variables
 
 ```
@@ -39,7 +32,7 @@ NPM_OTP_SECRET={the text value of the otp secret}
 NPM_TOKEN={the npm token}
 GITHUB_CLIENT_ID={github app id}
 GITHUB_CLIENT_SECRET={github app secret}
-DATASTORE_PROJECT_ID={your project id}
+GCLOUD_PROJECT={your project id}
 LOGIN_ENABLED=yes-this-is-a-login-server
 LOGIN_URL=https://protected-login-url
 REGISTRY_URL=https://public-registry-url
@@ -52,11 +45,51 @@ NPM_OTP_SECRET={the text value of the otp secret}
 NPM_TOKEN={the npm token}
 GITHUB_CLIENT_ID={github app id}
 GITHUB_CLIENT_SECRET={github app secret}
-DATASTORE_PROJECT_ID={your project id}
+GCLOUD_PROJECT={your project id}
 LOGIN_ENABLED=this-is-not-enabled
 LOGIN_URL=https://protected-login-url
 REGISTRY_URL=https://public-registry-url
 ```
+
+### Prerequisites
+
+#### Create an npm account
+
+You will need to create an npm account, which will be used or publication.
+This account should be configured such that 2FA is enabled for `authentication`
+and `publication`. When you are given a QR code to scan for an  authenticator
+app, use a QR code reader to fetch and store the secret associated with the
+2FA configuration. You will also need to scan the QR code with an authenticator
+app, so that you can provide an OTP token to npm.
+
+#### Create a GitHub OAuth Application
+
+As well as an npm account, you must create a GitHub OAuth application. These
+credentials are used when performing authorization checks.
+
+#### Create a datastore table
+
+The tokens used by Wombat Dressing Room are stored in a datastore table,
+before running the application for the first time you should run:
+
+```bash
+npm run create-indexes
+```
+
+To populate this data structure.
+
+#### Protect your application with IAP
+
+Wombat Dressing Room consists of an internal application, used for authorization
+and an external app, used for proxing to npm. You should limit access to the
+internal application, a great way to do so is with
+[IAP](https://cloud.google.com/iap/docs/app-engine-quickstart), configuring
+the `default` application, such that only select accounts have access, and
+configuring the `external` application such that anyone can access the proxy.
+
+### Local environment variables
+
+The local environment just runs a single process on `http://localhost:8080` it needs the path to your service account keys, a GitHub OAuth application, and npm credentials.
 
 # Start the service
 
