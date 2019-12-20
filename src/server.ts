@@ -397,7 +397,7 @@ async function enforceMatchingRelease(
       const versions = newVersions(lastPackument, newPackument);
       if (versions.length !== 1) {
         throw new WombatServerError(
-            'release backed tokens should be used exclusively for publications',
+            'No new versions found in packument. Release-backed tokens should be used exclusively for publication.',
             400);
       } else {
         newVersion = versions[0];
@@ -405,7 +405,9 @@ async function enforceMatchingRelease(
     }
     const latestRelease = await github.getLatestRelease(repoName, token);
     if (latestRelease !== `v${newVersion}`) {
-      const msg = `matching release not found for ${repoName}`;
+      console.info(
+          `latestRelease = ${latestRelease} newVersion = ${newVersion}`);
+      const msg = `matching release v${newVersion} not found for ${repoName}`;
       throw new WombatServerError(msg, 400);
     }
   } catch (err) {
