@@ -52,6 +52,23 @@ export const getRepo = (name: string, token: string): Promise<GhRepo> => {
 };
 
 /**
+ * https://developer.github.com/v3/repos/releases/#list-releases-for-a-repository
+ * @param name repository name including username. ex: node/node or bcoe/yargs
+ * @param token
+ *
+ * @returns string[] tag names of releases.
+ */
+export const getLatestRelease =
+    (name: string, token: string): Promise<string> => {
+      const client = gh.client(token, clientOptions);
+      return client.release(name, 'latest')
+          .infoAsync()
+          .then((release: Array<{[key: string]: string}>) => {
+            return release[0].tag_name;
+          });
+    };
+
+/**
  * calls github's "get a single user api" for a user token
  * https://developer.github.com/v3/users/#get-a-single-user
  */

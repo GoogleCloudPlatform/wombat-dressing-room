@@ -24,6 +24,15 @@
             </form>
         </div>
         <div>
+            <h3>GitHub release backed token</h3>
+            <div>a publication will only be permitted if a corresponding release is found on GitHub.</div>
+            <form id="release-token" action="/_/token">
+                <input type="hidden" value="release" name="type"/>
+                <input class="ott" type="hidden" name="ott" value=""/>
+                <button>Create release-backed publication token</button>
+            </form>
+        </div>
+        <div>
             <h3>Package specific publish token.</h3>
             <div>package tokens do not timeout, but can only publish a single package. Use these for build automation etc.</div>
             <form id="settings" action="/_/token">
