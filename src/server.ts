@@ -31,6 +31,8 @@ import uuid = require('uuid');
 import * as path from 'path';
 import {Packument} from '@npm/types';
 import {json} from './lib/json';
+import {newVersions} from './lib/new-versions';
+
 const validatePackage = require('validate-npm-package-name');
 
 class WombatServerError extends Error {
@@ -191,7 +193,7 @@ const writePackage = async(
 
   // fetch existing packument
   console.log('fetching ', packageName, 'from npm');
-  const doc = await packument(packageName);
+  let doc = await packument(packageName);
 
   let latest = undefined;
   let newPackage = false;
@@ -203,8 +205,8 @@ const writePackage = async(
     // set latest so we use the repository of the new package to verify github
     // permissions
     try {
-      latest = JSON.parse(drainedBody + '') as Packument;
-      latest = latest.versions[latest['dist-tags'].latest || ''];
+      doc = JSON.parse(drainedBody + '') as Packument;
+      latest = doc.versions[doc['dist-tags'].latest || ''];
       // not all packages have a latest dist-tag
     } catch (e) {
       console.log('got ' + e + ' parsing publish');
@@ -328,11 +330,14 @@ const writePackage = async(
     drainedBody = await drainRequest(req);
     try {
       await enforceMatchingRelease(
-          repo.name, user.token, drainedBody, req, res);
+          repo.name, user.token, doc, drainedBody, req, res);
     } catch (e) {
       res.statusCode = e.statusCode;
       res.statusMessage = e.statusMessage;
-      const ret = {error: formatError(e.statusMessage), statusCode: 400};
+      const ret = {
+        error: JSON.stringify({error: e.statusMessage}),
+        statusCode: e.statusCode
+      };
       res.end(ret.error);
       return ret;
     }
@@ -378,25 +383,35 @@ const writePackage = async(
  * packument that is being published to npm.
  */
 async function enforceMatchingRelease(
-    repoName: string, token: string, drainedBody: Buffer, req: express.Request,
-    res: express.Response) {
+    repoName: string, token: string, lastPackument: Packument|undefined,
+    drainedBody: Buffer, req: express.Request, res: express.Response) {
   try {
-    const packument = JSON.parse(drainedBody + '') as Packument;
-    const latest = packument.versions[packument['dist-tags'].latest || ''];
-    const releaseTags = await github.getReleaseTags(repoName, token);
-    console.info(`new version = ${latest.version}`);
-    console.info('tags = ', releaseTags);
-    const hasMatchingRelease = releaseTags.some((t) => {
-      return t === `v${latest.version}`;
-    });
-    if (!hasMatchingRelease) {
+    const newPackument = JSON.parse(drainedBody + '') as Packument;
+    let newVersion =
+        newPackument.versions[newPackument['dist-tags'].latest || ''].version;
+    // If this is not the first package publication, we infer the version being
+    // published by comparing the new and old packument:
+    if (lastPackument) {
+      console.info(
+          `${newPackument.name} has been published before, comparing versions`);
+      const versions = newVersions(lastPackument, newPackument);
+      if (versions.length !== 1) {
+        throw new WombatServerError(
+            'release backed tokens should be used exclusively for publications',
+            400);
+      } else {
+        newVersion = versions[0];
+      }
+    }
+    const latestRelease = await github.getLatestRelease(repoName, token);
+    if (latestRelease !== `v${newVersion}`) {
       const msg = `matching release not found for ${repoName}`;
       throw new WombatServerError(msg, 400);
     }
   } catch (err) {
     if (err.statusCode && err.statusMessage) throw err;
-    err.statusCode = 401;
-    err.statusMessage = 'failed to find corresponding release';
+    err.statusCode = 500;
+    err.statusMessage = 'unknown error';
     throw err;
   }
 }
