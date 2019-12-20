@@ -387,6 +387,14 @@ async function enforceMatchingRelease(
     drainedBody: Buffer, req: express.Request, res: express.Response) {
   try {
     const newPackument = JSON.parse(drainedBody + '') as Packument;
+    // Some types of updates don't include a full packument, e.g., changing
+    // a dist-tag:
+    if (!newPackument['dist-tags']) {
+      throw new WombatServerError(
+          'Release-backed tokens should be used exclusively for publication.',
+          400);
+    }
+
     let newVersion =
         newPackument.versions[newPackument['dist-tags'].latest || ''].version;
     // If this is not the first package publication, we infer the version being
@@ -735,14 +743,16 @@ app.get('/_/api/v1/tokens', (req, res) => {
           created: number,
           prefix: string,
           package?: string,
-          expiration?: number
+          expiration?: number,
+          releaseAs2FA?: boolean
         }> = [];
         keys.forEach((row) => {
           cleaned.push({
             created: row.created,
             prefix: row.value.substr(0, 5),
             package: row.package,
-            expiration: row.expiration
+            expiration: row.expiration,
+            releaseAs2FA: row.releaseAs2FA
           });
         });
 

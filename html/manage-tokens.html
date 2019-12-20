@@ -172,9 +172,8 @@
                 return;
             }
 
-            let table = tableize(state.tokens,['prefix','package','created','expires','actions'],(row,k,td)=>{
+            let table = tableize(state.tokens,['prefix','package','created','expires', 'releaseAs2FA', 'actions'],(row,k,td)=>{
               switch(k){
-                
                 case "expires":
                   if(row.expiration){
                     td.innerText = new Date(row.expiration).toJSON();
@@ -193,6 +192,9 @@
                   break;
                 case "prefix":
                   td.innerText = ""+row[k]+'...'
+                  break;
+                case "releaseAs2FA":
+                  td.innerText = row[k] ? 'true' : 'false'
                   break;
                 case "actions":
                   let link = document.createElement('a')
