@@ -24,7 +24,7 @@ limit access to the authentication server).
 
 _Wombat Dressing Room_ requires:
 
-* a [Google Cloud Platform](https://cloud.google.com/) Account to deploy to.
+* a [Google Cloud Platform](https://cloud.google.com/) account to deploy to.
 * an [npm account](https://www.npmjs.com/signup), to act as your
   publication bot.
 * and a [GitHub OAuth Application](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/)
@@ -120,13 +120,13 @@ To populate this datastore schema.
 
 _Note: it takes datastore a while to initialize the first time you run the
 application. You can view the status of index creation in the
-[Cloud Console](http://cloud.google.com/console).
+[Cloud Console](http://cloud.google.com/console)._
 
 ### Protect your application with IAP
 
-Wombat Dressing Room consists of an internal application, used for authorization
-and an external app, used for proxing to npm. You should limit access to the
-internal application, a great way to do so is with
+Wombat Dressing Room consists of an internal application, used for
+authorization, and an external app, used for proxing to npm. You should limit
+access to the internal application, a great way to do so is with
 [IAP](https://cloud.google.com/iap/docs/app-engine-quickstart): configuring
 the `default` application, such that only select accounts have access; and
 configuring the `external` application with the `allUsers` group,
