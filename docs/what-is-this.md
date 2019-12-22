@@ -14,10 +14,10 @@ critical to protecting publications is [two-factor authentication (2FA)][two-fac
 2FA requires that you provide two pieces of information when accessing a protected
 resource: _"something you know"_ (_for instance, a password_); and _"something
 you have"_ (_for instance, a code from an [authenticator app][authenticator]_). With 2FA, if your
-password is exposed, an attacker still can't publish a malicious packages
+password is exposed, an attacker still can't publish a malicious package
 (unless they also steal the _"something you have"_.)
 
-On my team, a small number of developers manage 75+ Node.js libraries. We see
+On my team, a small number of developers manage over 75 Node.js libraries. We see
 automation as key to making this possible: we've written tools that automate
 releases, validate license headers, ensure contributors
 have signed CLAs; we adhere to the philosophy, _automate all the things!_
@@ -26,7 +26,7 @@ have signed CLAs; we adhere to the philosophy, _automate all the things!_
   cellphone. As a result, folks often opt to turn off 2FA in their automation.
 
 What if you could have both automation and the added security of 2FA? 
-This is what we built [Wombat Dressing Room][wombat-dressing-room] for...
+This is why we've been building [Wombat Dressing Room][wombat-dressing-room].
 
 ## A different approach to authentication
 
@@ -40,19 +40,19 @@ Wombat Dressing Room can generate authentication tokens tied to repositories on
 GitHub. These tokens are tied to a single GitHub repository, which the user
 generating the token must have push permissions for.
 
-If a per-package publication token is leaked, an attacker gains the ability to
-publish malicious code to only a single package in an account.
+If a per-package publication token is leaked, an attacker can only hijack the
+single package that the token is associated with.
 
 ### Limited lifetime tokens
 
-Wombat Dressing Room can also generate access tokens that have a 24 hour
+_Wombat Dressing Room_ can also generate access tokens that have a 24 hour
 lifespan. In this model, a leaked token is only vulnerable until the the 24
 hour lifespan is hit, reducing the attack surface.
 
-### GitHub for 2FA
+### GitHub Releases as 2FA
 
 In this authentication model, a package can only be published to npm if a GitHub release
-with the same version number is found on GitHub.
+with a corresponding tag is found on GitHub.
 
 This introduces a true "second factor", as users must prove
 they have access to both Wombat Dressing Room and the repository on GitHub.
@@ -68,7 +68,7 @@ on getting it up and running can be found in its [README.md][readme].
 
 It's my hope that this will help other folks in the community simplify,
 and automate their release process, while minimizing the attack surface of
-their packages.
+their libraries.
 
 -- Ben.
 
