@@ -7,7 +7,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node -r source-map-support/register build/src/server.js",
-    "start-local": "cp local.env ./.env && npm run compile &&  npm start",
+    "develop": "cp config/local.env ./.env && npm run compile &&  npm start",
     "test": "c8 mocha --recursive build/test/",
     "lint": "gts check && eslint .",
     "fix": "gts fix && eslint . --fix",
