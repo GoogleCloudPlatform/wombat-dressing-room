@@ -34,11 +34,9 @@ If you follow these docs remember to replace `registry.npmjs.org` with `your-reg
 
 The tool is configured to require a unique token per package.
 
-If you require publishing multiple packages with a single token please email `node-team-npm@google.com` with the subject "wombot token request"
-
 ## NPM Configuration
 
-The whole point of this service is to reduce the attack surface area of google npm packages. In order to do that a couple things need to be done on npm.
+The whole point of this service is to reduce the attack surface area of npm packages. In order to do that a couple things need to be done on npm.
 
 ### new package
 

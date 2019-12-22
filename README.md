@@ -1,14 +1,20 @@
 # Wombat Dressing Room
 
-This is an npm registry proxy designed to reduce the attack surface of npm packages.
+This is an npm registry proxy designed to reduce the attack surface of npm
+packages.
 
 `npm publish`es are made from a single npm account with 2fa enabled.
 
-`npm publish`es can be made using the npm CLI just using this service as the registry. see the [Documentation](docs/usage.md) for information about how to use this service.
+`npm publish`es can be made using the npm CLI just using this service as the
+registry. see the [Documentation](docs/usage.md) for information about how to
+use this service.
 
 # Deployment
 
-This service is deployed in 2 distinct App Engine accounts; an external account for registry access, and a protected internal account for authentication.
+This service is deployed in 2 distinct App Engine services; an external service
+for registry access, and a protected service for authentication (you can use a
+proxy, such as [IAP](https://cloud.google.com/iap/), to limit access to the
+internal service).
 
 # Setup
 
@@ -20,10 +26,12 @@ To run a copy of this service yourself.
 
 ## Configure
 
-wombat-dressing-room uses [dotenv](https://www.npmjs.com/package/dotenv) for configuration.
+wombat-dressing-room uses [dotenv](https://www.npmjs.com/package/dotenv)
+for configuration.
 
-In order to start this service in development you need to create a `local.env`, in order to deploy you'll need an `config/external.env` and `config/internal.env` inside
-your project.
+In order to start this service in development you need to create a `local.env`,
+in order to deploy you'll need an `config/external.env` and
+`config/internal.env` inside your project.
 
 ### Internal environment variables
 
@@ -34,8 +42,8 @@ GITHUB_CLIENT_ID={github app id}
 GITHUB_CLIENT_SECRET={github app secret}
 GCLOUD_PROJECT={your project id}
 LOGIN_ENABLED=yes-this-is-a-login-server
-LOGIN_URL=https://protected-login-url
-REGISTRY_URL=https://public-registry-url
+LOGIN_URL=https://project.appspot.com]
+REGISTRY_URL=https://external-project.appspot.com
 ```
 
 ### External environment variables
@@ -47,8 +55,8 @@ GITHUB_CLIENT_ID={github app id}
 GITHUB_CLIENT_SECRET={github app secret}
 GCLOUD_PROJECT={your project id}
 LOGIN_ENABLED=this-is-not-enabled
-LOGIN_URL=https://protected-login-url
-REGISTRY_URL=https://public-registry-url
+LOGIN_URL=https://project.appspot.com]
+REGISTRY_URL=https://external-project.appspot.com
 ```
 
 ### Prerequisites
@@ -73,10 +81,16 @@ The tokens used by Wombat Dressing Room are stored in a datastore table,
 before running the application for the first time you should run:
 
 ```bash
+npm run deploy
+```
+
+To create the App Engine account, followed by:
+
+```bash
 npm run create-indexes
 ```
 
-To populate this data structure.
+To populate this datastore schema.
 
 #### Protect your application with IAP
 
@@ -89,7 +103,9 @@ configuring the `external` application such that anyone can access the proxy.
 
 ### Local environment variables
 
-The local environment just runs a single process on `http://localhost:8080` it needs the path to your service account keys, a GitHub OAuth application, and npm credentials.
+The local environment just runs a single process on `http://localhost:8080`
+it needs the path to your service account keys, a GitHub OAuth application,
+and npm credentials.
 
 # Start the service
 
