@@ -21,7 +21,8 @@ body{
 }
 
 #message{
-    margin:5px;
+    margin:5px 5px 5px 0px;
+    float: right;
 }
 
 #logo-image{
@@ -55,6 +56,10 @@ body{
     max-width: 980px;
     margin: 0 auto;
     padding: 45px;
+}
+
+button {
+    margin-top: 4px;
 }
 
 @media (max-width: 767px) {

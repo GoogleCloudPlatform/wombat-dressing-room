@@ -7,14 +7,15 @@
     </head>
     <body>
         <article class="markdown-body">
-                <div id="message">You're logged in as {username}. <a id="logout-link" href="javascript:void(0);">logout</a></div>
-                <h2>tools</h2>
+                <div id="message">
+                  You're logged in as {username}. <a id="logout-link" href="javascript:void(0);">logout</a>
+                </div>
+                <h2>Actions</h2>
                 <div>
                     <a href="/_/manage-tokens">Manage tokens</a> 
-                    <br/>create and delete publish tokens
+                    <br/>(Create and delete publish tokens.
                 </div>
-                <h2>Documentation</h2>
-                <a href="http://go/npm-publish">go/npm-publish</a>
+                {documentation}
                 <h2>News!</h2>
                 <div>
                     <b>2019-07-30</b> support for fetching package metadata (lerna support)</b>

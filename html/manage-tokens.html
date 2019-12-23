@@ -8,23 +8,22 @@
     <body>
         <div id="error"></div>
         <article class="markdown-body">
-            <a href="/" alt="return to home">Home</a>
             <div id="message">You're logged in as {username}. <a id="logout-link" href="javascript:void(0);">logout</a></div>
-
-            <h2>manage tokens</h2>
+            <a href="/" alt="return to home" class="navigation">Home</a>
+            <h2>Manage tokens</h2>
             <div>
                 <h3>Create token for package.</h3>
                 <form name="create-token" action="#">
                     <div>
-                        <label>Package Name</label><br/>
+                        <label>Package name</label><br/>
                         <textarea name="package-name" value="" placeholder="package name or one package name per line"></textarea><br/>
                     </div>
-                    <input type="submit" value="create token."/>
+                    <input type="submit" value="Create token"/>
                     <div class="loading" style="display:none;">creating...</div>
                 </form>
                 <div id="created-tokens-display" style="display:none;">
-                    <h4>created tokens:</h4>
-                    <div>NOTICE: these tokens will never be shown again.<br/>creating multiple tokens without refreshing the page will keep adding them to this section to copy easily.</div>
+                    <h4>Redently created tokens:</h4>
+                    <div><strong>Notice</strong>: these tokens will never be shown again.<br/>creating multiple tokens without refreshing the page will keep adding them to this section to copy easily.</div>
                     <a href='javascript:window.location.reload()'>Clear all</a><br/>
                     <ul id="created-list"></ul>
                 </div>
@@ -172,7 +171,7 @@
                 return;
             }
 
-            let table = tableize(state.tokens,['prefix','package','created','expires', 'releaseAs2FA', 'actions'],(row,k,td)=>{
+            let table = tableize(state.tokens,['prefix','package','created','expires', 'release-backed', 'actions'],(row,k,td)=>{
               switch(k){
                 case "expires":
                   if(row.expiration){
@@ -193,7 +192,7 @@
                 case "prefix":
                   td.innerText = ""+row[k]+'...'
                   break;
-                case "releaseAs2FA":
+                case "release-backed":
                   td.innerText = row[k] ? 'true' : 'false'
                   break;
                 case "actions":
