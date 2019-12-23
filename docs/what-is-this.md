@@ -1,6 +1,6 @@
 # Wombat Dressing Room, an npm Publication Proxy on GCP
 
-I'm excited to announce that we're open-sourcing the proxy we use on the 
+I'm excited to announce that we're open-sourcing the proxy we use on the
 Google Cloud Client Libraries team for handling npm publications, it's called
 [Wombat Dressing Room][wombat-dressing-room]. _Wombat Dressing Room_ provides features that
 help npm work better with automation, while minimally sacrificing security.
@@ -23,9 +23,9 @@ releases, validate license headers, ensure contributors
 have signed CLAs; we adhere to the philosophy, _[automate all the things!][robots]_
 
 > It's difficult to automate the step of entering a code off a
-  cellphone. As a result, folks often opt to turn off 2FA in their automation.
+> cellphone. As a result, folks often opt to turn off 2FA in their automation.
 
-What if you could have both automation and the added security of 2FA? 
+What if you could have both automation and the added security of 2FA?
 This is why we've been building [Wombat Dressing Room][wombat-dressing-room].
 
 ## A different approach to authentication
@@ -71,13 +71,13 @@ It's my hope that this will help other folks in the community simplify,
 and automate their release process, while minimizing the attack surface of
 their libraries.
 
-* [Wombat Dressing Room on GitHub][wombat-dressing-room].
-* [Google Cloud Client Libraries](https://github.com/googleapis).
+- [Wombat Dressing Room on GitHub][wombat-dressing-room].
+- [Google Cloud Client Libraries](https://github.com/googleapis).
 
 -- Ben.
 
 [authenticator]: https://en.wikipedia.org/wiki/Google_Authenticator
-[readme]: [https://github.com/GoogleCloudPlatform/wombat-dressing-room/blob/master/README.md]
-[two-factor-auth]: https://en.wikipedia.org/wiki/Multi-factor_authentication
+
+[readme]: [https://github.com/GoogleCloudPlatform/wombat-dressing-room/blob/master/README.md][two-factor-auth]: https://en.wikipedia.org/wiki/Multi-factor_authentication
 [wombat-dressing-room]: https://github.com/GoogleCloudPlatform/wombat-dressing-room
 [robots]: https://youtu.be/I0Kyebda6kY

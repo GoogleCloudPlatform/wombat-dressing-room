@@ -7,10 +7,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node -r source-map-support/register build/src/server.js",
-    "develop": "cp config/local.env ./.env && npm run compile &&  npm start",
+    "develop": "cp config/local.env ./.env && npm run compile && npm start",
     "test": "c8 mocha --recursive build/test/",
-    "lint": "gts check && eslint .",
-    "fix": "gts fix && eslint . --fix",
+    "lint": "gts check && eslint . && prettier -c **/*.md README.md documentation.md",
+    "fix": "gts fix && eslint . --fix && prettier --write **/*.md README.md documentation.md",
     "clean": "gts clean",
     "compile": "tsc -p . && npm run docs && cp src/lib/*.js build/src/lib/",
     "docs": "marked ./documentation.md -o html/documentation.html",

@@ -4,7 +4,7 @@ This is an npm registry proxy designed to reduce the attack surface of npm
 packages.
 
 > You publish to _Wombat Dressing Room_, and it enforces additional security
-  rules, before redirecting to _registry.npmjs.org_.
+> rules, before redirecting to _registry.npmjs.org_.
 
 Publishes are made from a single npm account with 2FA enabled (_a
 bot account_).
@@ -24,10 +24,10 @@ limit access to the authentication server).
 
 _Wombat Dressing Room_ requires:
 
-* a [Google Cloud Platform](https://cloud.google.com/) account to deploy to.
-* an [npm account](https://www.npmjs.com/signup), to act as your
+- a [Google Cloud Platform](https://cloud.google.com/) account to deploy to.
+- an [npm account](https://www.npmjs.com/signup), to act as your
   publication bot.
-* and a [GitHub OAuth Application](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/)
+- and a [GitHub OAuth Application](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/)
   to perform authentication and authorization.
 
 #### Create an npm account
@@ -103,9 +103,9 @@ To configure the Google App Engine services used by _Wombat Dressing Room_,
 perorm an initial deployment:
 
 1. install the [gcloud command line tool](https://cloud.google.com/sdk/gcloud/),
-  and run `gcloud auth login`.
+   and run `gcloud auth login`.
 1. run `GCLOUD_PROJECT=my-project npm run deploy`, where `my-project` is the
-  project configured in _Prerequisites_.
+   project configured in _Prerequisites_.
 
 ### Create a datastore table
 
