@@ -6,7 +6,7 @@ node_modules
 build
 code-workspace
 html/documentation.html
+html/changelog.html
 .vscode
 config
 .coverage
-
