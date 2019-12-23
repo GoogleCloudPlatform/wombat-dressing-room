@@ -222,7 +222,7 @@ type User = {
   [k: string]: any
 }|UserMain;
 
-interface PublishKey {
+export interface PublishKey {
   username: string;
   value: string;
   created: number;
