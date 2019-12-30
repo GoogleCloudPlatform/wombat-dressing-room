@@ -12,12 +12,15 @@ import {newVersions} from './new-versions';
 import {findLatest, packument, repoToGithub} from './packument';
 import {WombatServerError} from './wombat-server-error';
 
+interface WriteResponse {
+  statusCode: number;
+  error?: string;
+  newPackage?: boolean;
+}
+
 export const writePackage = async(
-    packageName: string, req: express.Request, res: express.Response): Promise<{
-  statusCode: number,
-  error?: string,
-  newPackage?: boolean
-}> => {
+    packageName: string, req: express.Request,
+    res: express.Response): Promise<WriteResponse> => {
   // verify authorization.
   const auth = req.headers.authorization + '';
   const token = auth.split(' ').pop();

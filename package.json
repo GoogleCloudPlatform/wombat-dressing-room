@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node -r source-map-support/register build/src/server.js",
     "develop": "cp config/local.env ./.env && npm run compile && npm start",
-    "test": "c8 mocha --recursive build/test/",
+    "test": "cross-env NODE_ENV=test c8 mocha --recursive build/test/",
     "lint": "gts check && eslint . && npm run lint-html",
     "lint-html": "prettier -c  **/*.{md,html,css} *.{md,html,css} !CONTRIBUTING.md !CHANGELOG.md !CODE_OF_CONDUCT.md !html/documentation.html !html/changelog.html",
     "fix": "gts fix && eslint . --fix && npm run fix-html",
@@ -41,6 +41,7 @@
     "@types/uuid": "^3.4.4",
     "c8": "^7.0.0",
     "chai": "^4.2.0",
+    "cross-env": "^6.0.3",
     "eslint": "^6.6.0",
     "eslint-config-prettier": "^6.5.0",
     "eslint-plugin-node": "^10.0.0",

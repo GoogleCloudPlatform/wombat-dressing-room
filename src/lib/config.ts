@@ -43,14 +43,16 @@ export const config = {
   projectId: process.env.DATASTORE_PROJECT_ID
 };
 
-if (!config.githubId || !config.githubSecret) {
-  throw new Error(
-      'server doesnt have required credentials. check env vars GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET ');
-}
+if (process.env.NODE_ENV !== 'test') {
+  if (!config.githubId || !config.githubSecret) {
+    throw new Error(
+        'server doesnt have required credentials. check env vars GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET ');
+  }
 
-if (!config.totpSecret || !config.npmToken) {
-  throw new Error(
-      'server doesnt have required npm credentials. check env vars NPM_TOKEN and NPM_OTP_SECRET.');
+  if (!config.totpSecret || !config.npmToken) {
+    throw new Error(
+        'server doesnt have required npm credentials. check env vars NPM_TOKEN and NPM_OTP_SECRET.');
+  }
 }
 
 // check tmp dir.
