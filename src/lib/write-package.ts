@@ -198,7 +198,7 @@ export const writePackage = async(
   // in the new packument aligns with the latest release created on GitHub:
   if (pubKey.releaseAs2FA) {
     console.info('token uses releases as 2FA');
-    drainedBody = await drainRequest(req);
+    drainedBody = drainedBody||await drainRequest(req)
     try {
       await enforceMatchingRelease(
           repo.name, user.token, doc, drainedBody, req, res);
