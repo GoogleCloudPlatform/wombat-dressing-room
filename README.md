@@ -1,63 +1,40 @@
 # Wombat Dressing Room
 
-This is an npm registry proxy designed to reduce the attack surface of npm packages.
+This is an npm registry proxy designed to reduce the attack surface of npm
+packages.
 
-`npm publish`es are made from a single npm account with 2fa enabled.
+> You publish to _Wombat Dressing Room_, and it enforces additional security
+> rules, before redirecting to _registry.npmjs.org_.
 
-`npm publish`es can be made using the npm CLI just using this service as the registry. see the [Documentation](docs/usage.md) for information about how to use this service.
+Publishes are made from a single npm account with 2FA enabled (_a
+bot account_).
 
-# Deployment
+Publishes can be made using the npm CLI, by making _Wombat Dressing Room_
+the default registry
+(_`npm config set registry https://external-project.appspot.com`_).
 
-This service is deployed in 2 distinct App Engine accounts; an external account for registry access, and a protected internal account for authentication.
+## Deployment
 
-# Setup
-
-To run a copy of this service yourself.
-
-## Install
-
-`npm install`
-
-## Configure
-
-wombat-dressing-room uses [dotenv](https://www.npmjs.com/package/dotenv) for configuration.
-
-In order to start this service in development you need to create a `local.env`, in order to deploy you'll need an `config/external.env` and `config/internal.env` inside
-your project.
-
-### Internal environment variables
-
-```
-NPM_OTP_SECRET={the text value of the otp secret}
-NPM_TOKEN={the npm token}
-GITHUB_CLIENT_ID={github app id}
-GITHUB_CLIENT_SECRET={github app secret}
-GCLOUD_PROJECT={your project id}
-LOGIN_ENABLED=yes-this-is-a-login-server
-LOGIN_URL=https://protected-login-url
-REGISTRY_URL=https://public-registry-url
-```
-
-### External environment variables
-
-```
-NPM_OTP_SECRET={the text value of the otp secret}
-NPM_TOKEN={the npm token}
-GITHUB_CLIENT_ID={github app id}
-GITHUB_CLIENT_SECRET={github app secret}
-GCLOUD_PROJECT={your project id}
-LOGIN_ENABLED=this-is-not-enabled
-LOGIN_URL=https://protected-login-url
-REGISTRY_URL=https://public-registry-url
-```
+This service is deployed in 2 distinct services: an external service
+for registry access; and a protected service for authentication/authorization
+(you can use a proxy, such as [IAP](https://cloud.google.com/iap/), to
+limit access to the authentication server).
 
 ### Prerequisites
+
+_Wombat Dressing Room_ requires:
+
+- a [Google Cloud Platform](https://cloud.google.com/) account to deploy to.
+- an [npm account](https://www.npmjs.com/signup), to act as your
+  publication bot.
+- and a [GitHub OAuth Application](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/)
+  to perform authentication and authorization.
 
 #### Create an npm account
 
 You will need to create an npm account, which will be used or publication.
 This account should be configured such that 2FA is enabled for `authentication`
-and `publication`. When you are given a QR code to scan for an  authenticator
+and `publication`. When you are given a QR code to scan for your authenticator
 app, use a QR code reader to fetch and store the secret associated with the
 2FA configuration. You will also need to scan the QR code with an authenticator
 app, so that you can provide an OTP token to npm.
@@ -65,43 +42,105 @@ app, so that you can provide an OTP token to npm.
 #### Create a GitHub OAuth Application
 
 As well as an npm account, you must create a GitHub OAuth application. These
-credentials are used when performing authorization checks.
+credentials are used when performing authenication: both when logging into
+_Wombat Dressing Room_, for creating tokens, and when verifying certain types
+of tokens.
 
-#### Create a datastore table
+_Note: the Authorization callback configured with the OAuth application
+should be the URL of the internal service, with the suffix `/oauth/github`._
 
-The tokens used by Wombat Dressing Room are stored in a datastore table,
-before running the application for the first time you should run:
+### Setup your environment
 
-```bash
-npm run create-indexes
+Once you've addressed the prerequisites, you should create environment files in
+the `config/` directory populating the appropriate variables.
+
+In order to start this service in development you need to create a
+`config/local.env`, in order to deploy you'll need an `config/external.env` and
+`config/internal.env`.
+
+#### Internal environment variables
+
+```
+NPM_OTP_SECRET={the text value of the otp secret}
+NPM_TOKEN={the npm token}
+GITHUB_CLIENT_ID={github app id}
+GITHUB_CLIENT_SECRET={github app secret}
+DATASTORE_PROJECT={project datastore is configured for}
+LOGIN_ENABLED=yes-this-is-a-login-server
+LOGIN_URL=https://project.appspot.com]
+REGISTRY_URL=https://external-project.appspot.com
 ```
 
-To populate this data structure.
+#### External environment variables
 
-#### Protect your application with IAP
+```
+NPM_OTP_SECRET={the text value of the otp secret}
+NPM_TOKEN={the npm token}
+GITHUB_CLIENT_ID={github app id}
+GITHUB_CLIENT_SECRET={github app secret}
+DATASTORE_PROJECT={project datastore is configured for}
+LOGIN_ENABLED=this-is-not-enabled
+LOGIN_URL=https://project.appspot.com]
+REGISTRY_URL=https://external-project.appspot.com
+```
 
-Wombat Dressing Room consists of an internal application, used for authorization
-and an external app, used for proxing to npm. You should limit access to the
-internal application, a great way to do so is with
-[IAP](https://cloud.google.com/iap/docs/app-engine-quickstart), configuring
-the `default` application, such that only select accounts have access, and
-configuring the `external` application such that anyone can access the proxy.
+#### Development environment variables
 
-### Local environment variables
+```
+NPM_OTP_SECRET={the text value of the otp secret}
+NPM_TOKEN={the npm token}
+GITHUB_CLIENT_ID={github app id}
+GITHUB_CLIENT_SECRET={github app secret}
+DATASTORE_PROJECT={project datastore is configured for}
+LOGIN_ENABLED=yes-this-is-a-login-server
+LOGIN_URL=http://127.0.0.1:8080
+REGISTRY_URL=hhttp://127.0.0.1:8080
+```
 
-The local environment just runs a single process on `http://localhost:8080` it needs the path to your service account keys, a GitHub OAuth application, and npm credentials.
+### Deploy the application
 
-# Start the service
+To configure the Google App Engine services used by _Wombat Dressing Room_,
+perorm an initial deployment:
 
-local development config. uses local.env.
+1. install the [gcloud command line tool](https://cloud.google.com/sdk/gcloud/),
+   and run `gcloud auth login`.
+1. run `GCLOUD_PROJECT=my-project npm run deploy`, where `my-project` is the
+   project configured in _Prerequisites_.
 
-`npm run start-local`
+### Create a datastore table
 
-# Stage
+The tokens used by _Wombat Dressing Room_ are stored in a datastore table,
+before accessing the application for the first time you should run:
 
-There is no stage! this should be fixed.
+```bash
+GCLOUD_PROJECT=my-project npm run create-indexes
+```
 
-## Release
+To populate this datastore schema.
+
+_Note: it takes datastore a while to initialize the first time you run the
+application. You can view the status of index creation in the
+[Cloud Console](http://cloud.google.com/console)._
+
+### Protect your application with IAP
+
+Wombat Dressing Room consists of an internal application, used for
+authorization, and an external app, used for proxing to npm. You should limit
+access to the internal application, a great way to do so is with
+[IAP](https://cloud.google.com/iap/docs/app-engine-quickstart): configuring
+the `default` application, such that only select accounts have access; and
+configuring the `external` application with the `allUsers` group,
+such that anyone can access the proxy.
+
+## Developing the service locally
+
+Populate `config/local.env`, and run:
+
+`npm run develop`
+
+## Deploying updates
+
+Populate `config/external.env`, and `config/internal.env`, and run:
 
 `npm run deploy`
 

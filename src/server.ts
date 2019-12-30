@@ -56,7 +56,18 @@ const readStatic = (p: string) => {
 const ghcss =
     fs.readFileSync(require.resolve('github-markdown-css/github-markdown.css'));
 const favicon = readStatic('favicon.ico');
-const documentation = readStatic('documentation.html') + '';
+const changelog = readStatic('changelog.html')
+                      .toString('utf8')
+                      // Reduce the heading level in the CHANGELOG by 1:
+                      .replace(/h3/g, 'h4')
+                      .replace(/h2/g, 'h3')
+                      .replace(/h1/g, 'h2');
+const documentation =
+    readStatic('documentation.html')
+        .toString('utf8')
+        .replace(
+            '{registry-href}',
+            config.userRegistryUrl || 'http://127.0.0.1:8080');
 const appjs = readStatic('app.js');
 const css = readStatic('app.css');
 const loginPage = readStatic('login.html') + '';
@@ -66,8 +77,9 @@ const manageTokensPage = readStatic('manage-tokens.html') + '';
 const SUFFIX_STRING = '_ns';
 
 let indexHtml = readStatic('index.html') + '';
-// add documentation from rendered markdown
-indexHtml = indexHtml.replace('{documentation}', documentation);
+// add documentation from rendered markdown:
+indexHtml = indexHtml.replace('{documentation}', documentation)
+                .replace('{changelog}', changelog);
 
 const uuidregex =
     /[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/ig;
@@ -692,7 +704,8 @@ app.get(
           datastore.completeHandoffKey(req.query.ott + '')
         ]);
         res.header('content-type', 'text/html');
-        res.end('token created!.<br/><a href="/">Manage Account</>');
+        res.end(
+            '<p>Token created!</p><p>You may close this window, or <a href="/">click here</a> to manage your tokens.</p>');
       } else {
         res.statusCode = 404;
         res.end('failed to login. run npm login again.');
@@ -744,7 +757,7 @@ app.get('/_/api/v1/tokens', (req, res) => {
           prefix: string,
           package?: string,
           expiration?: number,
-          releaseAs2FA?: boolean
+          'release-backed'?: boolean
         }> = [];
         keys.forEach((row) => {
           cleaned.push({
@@ -752,7 +765,7 @@ app.get('/_/api/v1/tokens', (req, res) => {
             prefix: row.value.substr(0, 5),
             package: row.package,
             expiration: row.expiration,
-            releaseAs2FA: row.releaseAs2FA
+            'release-backed': row.releaseAs2FA
           });
         });
 

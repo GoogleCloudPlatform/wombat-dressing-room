@@ -1,82 +1,99 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Wombat dressing room: token settings</title>
-        <link href="/app.css" rel="StyleSheet"/>
-    </head>
-    <body>
-        <style>
-        button{
-            margin-top:5px;
+  <head>
+    <title>Wombat dressing room: token settings</title>
+    <link href="/app.css" rel="StyleSheet" />
+  </head>
+  <body>
+    <article class="markdown-body">
+      <style>
+        .errored {
+          border: 1px solid red;
         }
-        .errored{
-            border:1px solid red;
-        }    
-        </style>
-        <h1>create a token</h1>
+      </style>
+      <h1>Choose a token type</h1>
+      <div>
+        <h3>24 hour publish token</h3>
         <div>
-            <h3> 24 hour publish token </h3>
-            <div>if you are publishing from your workstation or running the npm cli directly this is likely the best option.</div>
-            <form id="ttl-token" action="/_/token">
-                <input type="hidden" value="ttl" name="type"/>
-                <input class="ott" type="hidden" name="ott" value=""/>
-                <button>Create 24 hour token</button>
-            </form>
+          If you are publishing from your workstation, or running the npm cli
+          directly, this is likely the best option.
         </div>
+        <form id="ttl-token" action="/_/token">
+          <input type="hidden" value="ttl" name="type" />
+          <input class="ott" type="hidden" name="ott" value="" />
+          <button>Create 24 hour token</button>
+        </form>
+      </div>
+      <div>
+        <h3>Release-backed token</h3>
         <div>
-            <h3>GitHub release backed token</h3>
-            <div>a publication will only be permitted if a corresponding release is found on GitHub.</div>
-            <form id="release-token" action="/_/token">
-                <input type="hidden" value="release" name="type"/>
-                <input class="ott" type="hidden" name="ott" value=""/>
-                <button>Create release-backed publication token</button>
-            </form>
+          A publication will only be permitted if a corresponding release is
+          found on GitHub.
         </div>
+        <form id="release-token" action="/_/token">
+          <input type="hidden" value="release" name="type" />
+          <input class="ott" type="hidden" name="ott" value="" />
+          <button>Create release-backed publication token</button>
+        </form>
+      </div>
+      <div>
+        <h3>Package specific publish token.</h3>
         <div>
-            <h3>Package specific publish token.</h3>
-            <div>package tokens do not timeout, but can only publish a single package. Use these for build automation etc.</div>
-            <form id="settings" action="/_/token">
-                <label for="package">Which npm package can this token publish?</label><br/>
-                <input class="ott" type="hidden" name="ott" value=""/>
-                <input id="package-name-input" type="text" name="package" placeholder="full package name here" value=""/><br/>
-                <button>Continue</button>
-            </form>
+          Package tokens do not timeout, but can only publish a single package.
+          Use these for build automation, etc.
         </div>
-        <script>
-            
-        let query = {}
-        ;(window.location.search||'?').substr(1).split('&').forEach((kv)=>{
-            kv = kv.split('=')
-            query[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]||'')
-        })
+        <form id="settings" action="/_/token">
+          <label for="package">Which npm package can this token publish?</label
+          ><br />
+          <input class="ott" type="hidden" name="ott" value="" />
+          <input
+            id="package-name-input"
+            type="text"
+            name="package"
+            placeholder="full package name here"
+            value=""
+            autocomplete="off"
+          /><br />
+          <button>Create</button>
+        </form>
+      </div>
+      <script>
+        let query = {};
+        (window.location.search || '?')
+          .substr(1)
+          .split('&')
+          .forEach(kv => {
+            kv = kv.split('=');
+            query[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || '');
+          });
 
-        
-        if(query.ott) {     
-            document.querySelectorAll('.ott').forEach((el)=>{
-                el.value = query.ott
-            })
+        if (query.ott) {
+          document.querySelectorAll('.ott').forEach(el => {
+            el.value = query.ott;
+          });
         } else {
-            console.log('error. ott not found.')
+          console.log('error. ott not found.');
         }
 
-        const settings = document.getElementById('settings')
-        const packageInput = document.querySelector('input[name=package]')
-        settings.addEventListener('submit',(ev)=>{
-            let pkg = packageInput.value
-            if(!pkg.length) {
-                ev.preventDefault();
-                ev.stopImmediatePropagation();
-                packageInput.setAttribute('class','errored')
-                setTimeout(()=>{
-                    packageInput.setAttribute('class','')
-                },1000)
-                return;
-            }
-        })
+        const settings = document.getElementById('settings');
+        const packageInput = document.querySelector('input[name=package]');
+        settings.addEventListener('submit', ev => {
+          let pkg = packageInput.value;
+          if (!pkg.length) {
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+            packageInput.setAttribute('class', 'errored');
+            setTimeout(() => {
+              packageInput.setAttribute('class', '');
+            }, 1000);
+            return;
+          }
+        });
 
-        if(query.package){
-            packageInput.value = decodeURIComponent(query.package)
+        if (query.package) {
+          packageInput.value = decodeURIComponent(query.package);
         }
-        </script>
-    </body>
+      </script>
+    </article>
+  </body>
 </html>
