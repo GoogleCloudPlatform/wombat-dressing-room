@@ -1,5 +1,5 @@
 import {Packument} from '@npm/types';
-import * as express from 'express';
+import {Request, Response} from 'express';
 import * as request from 'request';
 
 import {config} from '../lib/config';
@@ -12,15 +12,15 @@ import {newVersions} from './new-versions';
 import {findLatest, packument, repoToGithub} from './packument';
 import {WombatServerError} from './wombat-server-error';
 
-interface WriteResponse {
+export interface WriteResponse {
   statusCode: number;
   error?: string;
   newPackage?: boolean;
 }
 
 export const writePackage = async(
-    packageName: string, req: express.Request,
-    res: express.Response): Promise<WriteResponse> => {
+    packageName: string, req: Request,
+    res: Response): Promise<WriteResponse> => {
   // verify authorization.
   const auth = req.headers.authorization + '';
   const token = auth.split(' ').pop();
@@ -54,12 +54,12 @@ export const writePackage = async(
     return ret;
   }
 
-  console.log(
+  console.info(
       'attempting to publish package ' + packageName +
       ' with publish key config ' + pubKey.package);
 
   if (pubKey.package && pubKey.package !== packageName) {
-    console.log('401. token cannot publish this package ' + packageName);
+    console.info('401. token cannot publish this package ' + packageName);
     res.statusMessage = 'token cannot publish this package';
     res.status(401);
     const ret = {
@@ -75,7 +75,7 @@ export const writePackage = async(
   }
 
   // fetch existing packument
-  console.log('fetching ', packageName, 'from npm');
+  console.info('fetching ', packageName, 'from npm');
   let doc = await packument(packageName);
 
   let latest = undefined;
@@ -92,7 +92,7 @@ export const writePackage = async(
       latest = doc.versions[doc['dist-tags'].latest || ''];
       // not all packages have a latest dist-tag
     } catch (e) {
-      console.log('got ' + e + ' parsing publish');
+      console.info('got ' + e + ' parsing publish');
       res.status(401);
       const ret = {
         error: '{"error":"malformed json package document in publish"}',
@@ -108,7 +108,7 @@ export const writePackage = async(
   }
 
   if (!latest) {
-    console.log('missing latest version for ' + packageName);
+    console.info('missing latest version for ' + packageName);
     // we need to verify that this package has a repo config that points to
     // github so users don't lock themselves out.
     res.status(500);
@@ -122,7 +122,7 @@ export const writePackage = async(
   }
 
   if (!latest.repository) {
-    console.log('missing repository in the latest version of ' + packageName);
+    console.info('missing repository in the latest version of ' + packageName);
     res.statusMessage = 'latest npm version missing github repository';
     res.statusCode = 400;
 
@@ -136,7 +136,7 @@ export const writePackage = async(
     return ret;
   }
 
-  console.log('latest repo ', latest.repository);
+  console.info('latest repo ', latest.repository);
 
   const repo = repoToGithub(latest.repository);
 
@@ -179,7 +179,7 @@ export const writePackage = async(
     return ret;
   }
 
-  console.log('repo response!', repoResp.permissions);
+  console.info('repo response!', repoResp.permissions);
 
   if (!(repoResp.permissions.push || repoResp.permissions.admin)) {
     res.status(401);
@@ -201,7 +201,8 @@ export const writePackage = async(
     drainedBody = drainedBody || await drainRequest(req);
     try {
       await enforceMatchingRelease(
-          repo.name, user.token, doc, drainedBody, req, res);
+          repo.name, user.token, newPackage ? undefined : doc, drainedBody, req,
+          res);
     } catch (e) {
       res.statusCode = e.statusCode;
       res.statusMessage = e.statusMessage;
@@ -214,40 +215,46 @@ export const writePackage = async(
     }
   }
 
-  // update auth information to be the publish user.
-  req.headers.authorization = 'Bearer ' + config.npmToken;
-  // send 2fa token.
-  req.headers['npm-otp'] = totpCode(config.totpSecret);
-  req.headers.host = 'registry.npmjs.org';
-  const npmreq = request(
-      'https://registry.npmjs.org' + req.url,
-      {method: req.method, headers: req.headers});
-
-  // if we've buffered the publish request already
-  if (drainedBody) {
-    npmreq.pipe(res);
-    npmreq.write(drainedBody);
-    // TODO: missing end here? make sure this path is covered.
-  } else {
-    req.pipe(npmreq).pipe(res);
-  }
-
-  req.on('error', (e: Error) => {
-    console.log('oh how strange. request errored', e);
-  });
-  npmreq.on('error', (e: Error) => {
-    console.log('npm request error ', e);
-  });
-  res.on('error', (e: Error) => {
-    console.log('error sending response for npm publish', e);
-  });
-
-  return new Promise((resolve, reject) => {
-    npmreq.on('response', async (npmres) => {
-      resolve({statusCode: npmres.statusCode, newPackage});
-    });
-  });
+  return writePackage.pipeToNpm(req, res, drainedBody, newPackage);
 };
+
+writePackage.pipeToNpm =
+    (req: Request, res: Response, drainedBody: false|Buffer,
+     newPackage: boolean): Promise<WriteResponse> => {
+      // update auth information to be the publish user.
+      req.headers.authorization = 'Bearer ' + config.npmToken;
+      // send 2fa token.
+      req.headers['npm-otp'] = totpCode(config.totpSecret);
+      req.headers.host = 'registry.npmjs.org';
+      const npmreq = request(
+          'https://registry.npmjs.org' + req.url,
+          {method: req.method, headers: req.headers});
+
+      // if we've buffered the publish request already
+      if (drainedBody) {
+        npmreq.pipe(res);
+        npmreq.write(drainedBody);
+        // TODO: missing end here? make sure this path is covered.
+      } else {
+        req.pipe(npmreq).pipe(res);
+      }
+
+      req.on('error', (e: Error) => {
+        console.info('oh how strange. request errored', e);
+      });
+      npmreq.on('error', (e: Error) => {
+        console.info('npm request error ', e);
+      });
+      res.on('error', (e: Error) => {
+        console.info('error sending response for npm publish', e);
+      });
+
+      return new Promise((resolve, reject) => {
+        npmreq.on('response', async (npmres) => {
+          resolve({statusCode: npmres.statusCode, newPackage});
+        });
+      });
+    };
 
 /*
  * Throws an exception if a matching GitHub release cannot be found for the
@@ -255,7 +262,7 @@ export const writePackage = async(
  */
 async function enforceMatchingRelease(
     repoName: string, token: string, lastPackument: Packument|undefined,
-    drainedBody: Buffer, req: express.Request, res: express.Response) {
+    drainedBody: Buffer, req: Request, res: Response) {
   try {
     const newPackument = JSON.parse(drainedBody + '') as Packument;
     // Some types of updates don't include a full packument, e.g., changing
