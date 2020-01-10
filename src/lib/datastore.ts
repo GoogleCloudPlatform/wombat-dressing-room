@@ -217,7 +217,7 @@ export const deletePublishKey = async (token: string) => {
 };
 
 
-type User = {
+export type User = {
   // tslint:disable-next-line:no-any
   [k: string]: any
 }|UserMain;
