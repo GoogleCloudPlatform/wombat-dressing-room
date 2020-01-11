@@ -22,9 +22,7 @@
     "external-deploy": "cp config/external.env .env && gcloud app deploy app-external.yaml --project $GCLOUD_PROJECT",
     "deploy": "npm run compile && npm run internal-deploy && npm run external-deploy",
     "create-indexes": "gcloud --project $GCLOUD_PROJECT datastore indexes create ./index.yaml",
-    "docs-test": "echo 'add doc tests'",
-    "samples-test": "echo 'add samples test'",
-    "system-test": "echo 'add system test'"
+    "coverage": "c8 report --reporter=json && codecov -f coverage/*.json"
   },
   "keywords": [],
   "author": "Google LLC",
@@ -39,6 +37,7 @@
     "@types/uuid": "^3.4.4",
     "c8": "^7.0.0",
     "chai": "^4.2.0",
+    "codecov": "^3.6.1",
     "cross-env": "^6.0.3",
     "eslint": "^6.6.0",
     "eslint-config-prettier": "^6.5.0",
