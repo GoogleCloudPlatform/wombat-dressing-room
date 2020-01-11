@@ -9,7 +9,7 @@ export const drainRequest = (req: express.Request): Promise<Buffer> => {
     req.on('end', () => {
       resolve(Buffer.concat(buf));
     });
-    req.on('error', (e) => {
+    req.on('error', e => {
       reject(e);
     });
   });

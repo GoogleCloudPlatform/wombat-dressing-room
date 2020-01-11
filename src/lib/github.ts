@@ -19,7 +19,7 @@ import {URL} from 'url';
 
 const gh = require('octonode');
 
-let clientOptions: {}|undefined;
+let clientOptions: {} | undefined;
 
 /**
  * https://developer.github.com/v3/repos/#get
@@ -41,9 +41,10 @@ export const getRepo = (name: string, token: string): Promise<GhRepo> => {
 
       if (err || status !== 200) {
         err =
-            err ||
-            new Error(
-                'status ' + status + ' returned from github accessing ' + name);
+          err ||
+          new Error(
+            'status ' + status + ' returned from github accessing ' + name
+          );
         reject(err);
       }
       resolve(data);
@@ -58,28 +59,33 @@ export const getRepo = (name: string, token: string): Promise<GhRepo> => {
  *
  * @returns string[] tag names of releases.
  */
-export const getLatestRelease =
-    (name: string, token: string): Promise<string> => {
-      const client = gh.client(token, clientOptions);
-      return client.release(name, 'latest')
-          .infoAsync()
-          .then((release: Array<{[key: string]: string}>) => {
-            return release[0].tag_name;
-          });
-    };
+export const getLatestRelease = (
+  name: string,
+  token: string
+): Promise<string> => {
+  const client = gh.client(token, clientOptions);
+  return client
+    .release(name, 'latest')
+    .infoAsync()
+    .then((release: Array<{[key: string]: string}>) => {
+      return release[0].tag_name;
+    });
+};
 
 /**
  * calls github's "get a single user api" for a user token
  * https://developer.github.com/v3/users/#get-a-single-user
  */
-export const getUser = (token: string): Promise<GhUser >=> {
+export const getUser = (token: string): Promise<GhUser> => {
   return new Promise((resolve, reject) => {
     const client = gh.client(token, clientOptions);
     client.get('/user', (err: Error, status: number, data: GhUser) => {
       if (err || status !== 200) {
-        err = err ||
-            new Error(
-                  'status ' + status + ' returned from github accessing user');
+        err =
+          err ||
+          new Error(
+            'status ' + status + ' returned from github accessing user'
+          );
         return reject(err);
       }
       resolve(data);
@@ -87,29 +93,35 @@ export const getUser = (token: string): Promise<GhUser >=> {
   });
 };
 
-export const webAccessToken =
-    (appid: string, appsecret: string, code: string): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        gh.auth
-            .config({
-              id: appid,
-              secret: appsecret,
-            })
-            .login(code, (err: Error|undefined, token: string, headers: {}) => {
-              if (err) return reject(err);
-              resolve(token);
-            });
+export const webAccessToken = (
+  appid: string,
+  appsecret: string,
+  code: string
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    gh.auth
+      .config({
+        id: appid,
+        secret: appsecret,
+      })
+      .login(code, (err: Error | undefined, token: string, headers: {}) => {
+        if (err) return reject(err);
+        resolve(token);
       });
-    };
+  });
+};
 
-export const webAccessLink =
-    (appid: string, appsecret: string, scopes: string[]) => {
-      const link =
-          gh.auth.config({id: appid, secret: appsecret}).login(scopes) as
-          string;
-      const code = link.match(/&state=([0-9a-z]{32})/i) || '';
-      return {link, code};
-    };
+export const webAccessLink = (
+  appid: string,
+  appsecret: string,
+  scopes: string[]
+) => {
+  const link = gh.auth
+    .config({id: appid, secret: appsecret})
+    .login(scopes) as string;
+  const code = link.match(/&state=([0-9a-z]{32})/i) || '';
+  return {link, code};
+};
 
 export const setApiUrl = (url?: string) => {
   if (!url) {
@@ -132,5 +144,5 @@ export interface GhRepo {
   full_name: string;
 
   private: boolean;
-  permissions: {push: boolean, admin: boolean, pull: boolean};
+  permissions: {push: boolean; admin: boolean; pull: boolean};
 }
