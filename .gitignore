@@ -9,4 +9,4 @@ html/documentation.html
 html/changelog.html
 .vscode
 config
-.coverage
+coverage
