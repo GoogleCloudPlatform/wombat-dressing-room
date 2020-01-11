@@ -30,11 +30,14 @@ export const generatePublishKey = () => {
 const datastore = new Datastore({projectId: config.projectId});
 
 // save the user's github token to verify repo access on key based publish
-export const createUser =
-    (username: string, githubToken: string): Promise<{} >=> {
+export const createUser = (
+  username: string,
+  githubToken: string
+): Promise<{}> => {
   if (!config.loginEnabled) {
     return Promise.reject(
-        new Error('login/creation of new users is disabled on this server.'));
+      new Error('login/creation of new users is disabled on this server.')
+    );
   }
 
   // The kind for the new entity
@@ -52,7 +55,7 @@ export const createUser =
   return datastore.save(user);
 };
 
-export const getUser = async(username: string): Promise<false|User> => {
+export const getUser = async (username: string): Promise<false | User> => {
   const key = datastore.key(['User', username]);
 
   const res = await datastore.get(key);
@@ -63,19 +66,19 @@ export const getUser = async(username: string): Promise<false|User> => {
   return res[0];
 };
 
-export const saveHandoffKey = async(publishKey: string): Promise<string> => {
+export const saveHandoffKey = async (publishKey: string): Promise<string> => {
   const handoff = uuid.v4() + '_h';
 
   const dbKey = datastore.key(['HandoffKey', handoff]);
   await datastore.save({
     key: dbKey,
-    data: {value: publishKey, complete: false, created: Date.now()}
+    data: {value: publishKey, complete: false, created: Date.now()},
   });
 
   return handoff;
 };
 
-export const completeHandoffKey = async(handoff: string): Promise<string> => {
+export const completeHandoffKey = async (handoff: string): Promise<string> => {
   if (!config.loginEnabled) {
     return Promise.reject(new Error('disabled on this server.'));
   }
@@ -92,8 +95,9 @@ export const completeHandoffKey = async(handoff: string): Promise<string> => {
   return handoff;
 };
 
-export const getHandoffKey =
-    async(handoff: string): Promise<HandoffKey|false> => {
+export const getHandoffKey = async (
+  handoff: string
+): Promise<HandoffKey | false> => {
   const dbKey = datastore.key(['HandoffKey', handoff]);
   const result = await datastore.get(dbKey);
   if (!result || !result.length || !result[0]) {
@@ -107,9 +111,13 @@ export const getHandoffKey =
   return false;
 };
 
-export const savePublishKey = async(
-    username: string, publishKey: string, packageName?: string,
-    expiration?: number, releaseAs2FA?: boolean): Promise<{}> => {
+export const savePublishKey = async (
+  username: string,
+  publishKey: string,
+  packageName?: string,
+  expiration?: number,
+  releaseAs2FA?: boolean
+): Promise<{}> => {
   if (!config.loginEnabled) {
     return Promise.reject(new Error('disabled on this server.'));
   }
@@ -127,14 +135,14 @@ export const savePublishKey = async(
       created: Date.now(),
       package: packageName,
       expiration,
-      releaseAs2FA
-    }
+      releaseAs2FA,
+    },
   });
 };
 
 export type PublishKeyResult = [PublishKey[], {}];
 
-export const getPublishKeys = (username: string): Promise<PublishKey[] >=> {
+export const getPublishKeys = (username: string): Promise<PublishKey[]> => {
   console.log(username, ' querying tokens for <-----');
   const query = datastore.createQuery('PublishKey');
   query.filter('username', username);
@@ -156,15 +164,17 @@ export const getPublishKeys = (username: string): Promise<PublishKey[] >=> {
   } ]
   */
   return datastore.runQuery(query).then((result: PublishKeyResult) => {
-    return (result[0] || []).filter((row) => {
+    return (result[0] || []).filter(row => {
       return (row.expiration || Infinity) >= Date.now();
     });
   });
 };
 
-export const getObfuscatedPublishKey =
-    (username: string, created: number, prefix: string):
-        Promise<PublishKey|undefined >=> {
+export const getObfuscatedPublishKey = (
+  username: string,
+  created: number,
+  prefix: string
+): Promise<PublishKey | undefined> => {
   const query = datastore.createQuery('PublishKey');
   query.filter('username', username);
   // this is a load bearing typecast to number.
@@ -172,9 +182,9 @@ export const getObfuscatedPublishKey =
 
   return datastore.runQuery(query).then((result: PublishKeyResult) => {
     const rows = result[0];
-    let found: PublishKey|undefined;
+    let found: PublishKey | undefined;
     console.log('found rows for obfuscated key ', rows.length);
-    rows.forEach((row) => {
+    rows.forEach(row => {
       // dont find anything if prefix is too short
       if (row.value.indexOf(prefix) === 0 && prefix.length >= 5) {
         found = row;
@@ -184,8 +194,9 @@ export const getObfuscatedPublishKey =
   });
 };
 
-
-export const getPublishKey = async(id: string): Promise<PublishKey|false >=> {
+export const getPublishKey = async (
+  id: string
+): Promise<PublishKey | false> => {
   const dbKey = datastore.key(['PublishKey', id]);
   const res = await datastore.get(dbKey);
   console.log('has publish key for id? ', !!res);
@@ -218,11 +229,12 @@ export const deletePublishKey = async (token: string) => {
   return true;
 };
 
-
-export type User = {
-  // tslint:disable-next-line:no-any
-  [k: string]: any
-}|UserMain;
+export type User =
+  | {
+      // tslint:disable-next-line:no-any
+      [k: string]: any;
+    }
+  | UserMain;
 
 export interface PublishKey {
   username: string;

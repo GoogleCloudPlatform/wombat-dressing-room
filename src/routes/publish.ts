@@ -11,14 +11,22 @@ export const publish = async (req: express.Request, res: express.Response) => {
   if (result.newPackage && result.statusCode === 200) {
     try {
       const res = await require2fa(
-          packageName, config.npmToken, totpCode(config.totpSecret));
+        packageName,
+        config.npmToken,
+        totpCode(config.totpSecret)
+      );
       console.log(
-          'enabled per package 2fa for ' + packageName + '? ', res.status,
-          res.data + '');
+        'enabled per package 2fa for ' + packageName + '? ',
+        res.status,
+        res.data + ''
+      );
     } catch (e) {
       console.log(
-          'attempted to enable per package 2fa for ' + packageName +
-          ' but got error ' + e);
+        'attempted to enable per package 2fa for ' +
+          packageName +
+          ' but got error ' +
+          e
+      );
     }
   }
 };

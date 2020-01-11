@@ -40,18 +40,20 @@ export const config = {
   userRegistryUrl: process.env.REGISTRY_URL,
   // if users should be able to login.
   loginEnabled: process.env.LOGIN_ENABLED === 'yes-this-is-a-login-server',
-  projectId: process.env.DATASTORE_PROJECT_ID
+  projectId: process.env.DATASTORE_PROJECT_ID,
 };
 
 if (process.env.NODE_ENV !== 'test') {
   if (!config.githubId || !config.githubSecret) {
     throw new Error(
-        'server doesnt have required credentials. check env vars GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET ');
+      'server doesnt have required credentials. check env vars GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET '
+    );
   }
 
   if (!config.totpSecret || !config.npmToken) {
     throw new Error(
-        'server doesnt have required npm credentials. check env vars NPM_TOKEN and NPM_OTP_SECRET.');
+      'server doesnt have required npm credentials. check env vars NPM_TOKEN and NPM_OTP_SECRET.'
+    );
   }
 }
 
