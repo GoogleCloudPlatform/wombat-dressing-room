@@ -53,7 +53,7 @@
     "typescript": "^3.5.3"
   },
   "dependencies": {
-    "@google-cloud/datastore": "^2.0.0",
+    "@google-cloud/datastore": "^5.0.3",
     "@npm/types": "^1.0.1",
     "cookie-session": "^2.0.0-beta.3",
     "dotenv": "^6.1.0",
