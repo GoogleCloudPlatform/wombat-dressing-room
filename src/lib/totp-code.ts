@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { authenticator } from '@otplib/preset-default';
+import {authenticator} from '@otplib/preset-default';
 
 export const totpCode = (secret: string, epoch?: number) => {
   if (epoch) {
-    authenticator.options = {epoch}
+    authenticator.options = {epoch};
   }
   const token = authenticator.generate(secret);
   return token;
