@@ -1,4 +1,5 @@
 # Wombat Dressing Room
+
 > Google's npm registry proxy. Designed to reduce the attack surface of npm packages.
 
 [![Build Status](https://github.com/GoogleCloudPlatform/wombat-dressing-room/workflows/ci/badge.svg)](https://github.com/GoogleCloudPlatform/wombat-dressing-room/actions)
@@ -8,14 +9,14 @@
 ## What it does
 
 - You publish to _Wombat Dressing Room_, and it enforces additional security
-rules, before redirecting to _registry.npmjs.org_.
+  rules, before redirecting to _registry.npmjs.org_.
 
 - Publishes are made from a single npm account with 2FA enabled (_a
-bot account_).
+  bot account_).
 
 - Publishes can be made using the npm CLI, by making _Wombat Dressing Room_
-the default registry
-(_`npm config set registry https://external-project.appspot.com`_).
+  the default registry
+  (_`npm config set registry https://external-project.appspot.com`_).
 
 ## Deployment
 
