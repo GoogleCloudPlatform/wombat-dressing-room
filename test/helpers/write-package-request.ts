@@ -3,7 +3,7 @@ import {Request} from 'express';
 
 export function writePackageRequest(
   headers: {[key: string]: string},
-  packument?: Packument
+  packument?: Packument | string
 ): Request {
   return {
     headers,
