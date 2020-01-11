@@ -295,16 +295,17 @@ async function enforceMatchingRelease(
   res: Response
 ) {
   try {
-    const newPackument = JSON.parse(drainedBody + '') as Packument;
-    // Some types of updates don't include a full packument, e.g., changing
-    // a dist-tag:
-    if (!newPackument['dist-tags']) {
+    const maybePackument = JSON.parse(drainedBody + '');
+    if (
+      typeof maybePackument !== 'object' ||
+      maybePackument['dist-tags'] === undefined
+    ) {
       throw new WombatServerError(
         'Release-backed tokens should be used exclusively for publication.',
         400
       );
     }
-
+    const newPackument = maybePackument as Packument;
     let newVersion =
       newPackument.versions[newPackument['dist-tags'].latest || ''].version;
     // If this is not the first package publication, we infer the version being
