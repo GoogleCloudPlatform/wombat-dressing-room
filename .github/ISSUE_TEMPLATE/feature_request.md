@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for this library
+about: Suggest an idea for this tool
 
 ---
 
