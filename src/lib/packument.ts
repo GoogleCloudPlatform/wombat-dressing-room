@@ -130,7 +130,7 @@ export const require2fa = (packageName: string, token: string, otpCode: string):
 
       const status = res.statusCode;
       const buf: Buffer[] = [];
-      res.on('data', (b) => {
+      res.on('data', (b: Buffer) => {
         buf.push(b);
       });
       res.on('error', (err) => {

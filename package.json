@@ -36,7 +36,6 @@
     "@types/express": "^4.16.0",
     "@types/mocha": "^5.2.7",
     "@types/morgan": "^1.7.35",
-    "@types/nock": "^11.1.0",
     "@types/request": "^2.48.1",
     "@types/uuid": "^3.4.4",
     "c8": "^7.0.0",
