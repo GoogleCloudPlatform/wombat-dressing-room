@@ -1,3 +1,6 @@
-node_modules/*
-samples/node_modules/*
-src/**/doc/*
+.coverage
+CONTRIBUTING.md
+CHANGELOG.md
+CODE_OF_CONDUCT.md
+html/documentation.html
+html/changelog.html
