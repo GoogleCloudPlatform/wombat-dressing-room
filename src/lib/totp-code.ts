@@ -19,7 +19,6 @@ import { authenticator } from '@otplib/preset-default';
 export const totpCode = (secret: string, epoch?: number) => {
   if (epoch) {
     authenticator.options = {epoch}
-    epoch = epoch / 1000;
   }
   const token = authenticator.generate(secret);
   return token;
