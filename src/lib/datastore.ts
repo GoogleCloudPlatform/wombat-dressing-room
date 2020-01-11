@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-const aDatastore = require('@google-cloud/datastore');
+import {Datastore} from '@google-cloud/datastore';
 import * as uuid from 'uuid';
+
 import {config} from './config';
+
 const isUUID = require('is-uuid');
 
 const FIVE_MINUTES = 1000 * 60 * 5;
@@ -25,7 +27,7 @@ export const generatePublishKey = () => {
   return uuid.v4();
 };
 
-const datastore = new aDatastore({projectId: config.projectId});
+const datastore = new Datastore({projectId: config.projectId});
 
 // save the user's github token to verify repo access on key based publish
 export const createUser =
