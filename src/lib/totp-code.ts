@@ -20,6 +20,5 @@ export const totpCode = (secret: string, epoch?: number) => {
   if (epoch) {
     authenticator.options = {epoch};
   }
-  const token = authenticator.generate(secret);
-  return token;
+  return authenticator.generate(secret);
 };
