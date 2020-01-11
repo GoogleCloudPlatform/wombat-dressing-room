@@ -15,11 +15,11 @@
  */
 
 import * as crypto from 'crypto';
-import * as otplib from 'otplib';
+import {Authenticator} from '@otplib/core';
 
 export const totpCode = (secret: string, epoch?: number) => {
   if (epoch) epoch = epoch / 1000;
-  const authen = new otplib.authenticator.Authenticator();
+  const authen = new Authenticator();
   authen.options = {epoch, crypto};
   return authen.generate(secret);
 };
