@@ -1,0 +1,19 @@
+<h2 id="getting-started">Getting started</h2>
+<p><em>Wombat Dressing Room</em> allows you to create secure tokens for publishing to the
+npm registry from automated systems. Follow the steps below to generate a token:</p>
+<h3 id="generating-per-package-publication-tokens">Generating per-package publication tokens</h3>
+<ol>
+<li>click <a href="/_/manage-tokens">Manage tokens</a>, under <em>Actions</em>.</li>
+<li>enter a <em>package name</em>, in the text area provided.</li>
+<li>click <code>Create Token</code>.</li>
+<li>use the token generated to publish to the corresponding <em>package name</em>.</li>
+</ol>
+<h3 id="generating-24-hour-and-release-backed-tokens">Generating 24 hour and release-backed tokens</h3>
+<ol>
+<li>set <code>Wombat Dressing Room</code> as your default registry, <code>npm config set registry {{registryHref}}</code>.</li>
+<li><code>npm login</code>.</li>
+<li>Click the <code>Create release-backed publication token</code> or
+<code>Create 24 hour token</code> button.</li>
+<li>Your <code>~/.npmrc</code> will now be populated with a token which you can either use
+locally, or copy for use in automation tasks.</li>
+</ol>
