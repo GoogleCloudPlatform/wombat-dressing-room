@@ -224,12 +224,6 @@ const redirectToLoginServer = (req: express.Request, res: express.Response) => {
   return false;
 };
 
-app.get('/login', async (req, res) => {
-  return res.render('login', {
-    title: 'Login',
-  });
-});
-
 app.get(
   '/',
   wrap(async (req, res) => {
