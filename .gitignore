@@ -5,8 +5,8 @@ node_modules
 .nyc_output
 build
 code-workspace
-views/partials/documentation.md
-views/partials/changelog.md
+views/partials/documentation.hbs
+views/partials/changelog.hbs
 .vscode
 config
 coverage
