@@ -3,5 +3,6 @@
 CONTRIBUTING.md
 CHANGELOG.md
 CODE_OF_CONDUCT.md
-html/documentation.html
-html/changelog.html
+views/partials/documentation.hbs
+views/partials/changelog.hbs
+public/github-markdown.css
