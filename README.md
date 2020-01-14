@@ -151,7 +151,7 @@ Populate `config/external.env`, and `config/internal.env`, and run:
 
 ## Contributing
 
-Contributions welcome! See the [Contributing Guide](https://github.com/googleapis/wombat-dressing-room/blob/master/CONTRIBUTING.md).
+Contributions welcome! See the [Contributing Guide](https://github.com/GoogleCloudPlatform/wombat-dressing-room/blob/master/CONTRIBUTING.md).
 
 ## License
 
