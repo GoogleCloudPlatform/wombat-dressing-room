@@ -262,12 +262,14 @@ function respondWithError(res: Response, message: string, code = 400) {
   res.status(code || 401);
   const ret = {
     error: formatError(message),
-    statusCode: 401,
+    statusCode: code,
   };
   res.json(ret);
   return ret;
 }
 
+// the npm client will print non json errors to the screen in publish.
+// this is a really great way to give detailed error messages
 const formatError = (message: string) => {
   return `
   ===============================
