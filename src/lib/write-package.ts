@@ -122,7 +122,7 @@ export const writePackage = async (
       ),
       statusCode: 500,
     };
-    res.end(ret.error);
+    res.end(JSON.stringify(ret));
     return ret;
   }
 
@@ -139,7 +139,7 @@ export const writePackage = async (
       ),
       statusCode: 400,
     };
-    res.end(ret.error);
+    res.end(JSON.stringify(ret));
     return ret;
   }
 
@@ -150,6 +150,7 @@ export const writePackage = async (
   // make sure publish user has permission to publish the package
   // get the github repository from packument
   if (!repo) {
+    console.info('failed to find repository in latest.repository field.')
     res.status(400);
     const ret = {
       error: formatError(
@@ -157,7 +158,7 @@ export const writePackage = async (
       ),
       statusCode: 400,
     };
-    res.end(ret.error);
+    res.end(JSON.stringify(ret));
     return ret;
   }
 
@@ -165,6 +166,8 @@ export const writePackage = async (
   try {
     repoResp = await github.getRepo(repo.name, user.token);
   } catch (e) {
+    console.info('failed to get repo response for '+repo.name+' '+e)
+    res.status(400);
     const ret = {
       error: formatError(
         'respository ' +
@@ -175,21 +178,21 @@ export const writePackage = async (
       ),
       statusCode: 400,
     };
-    res.end(ret.error);
+    res.end(JSON.stringify(ret));
     return ret;
   }
 
   if (!repoResp) {
-    res.status(404);
+    res.status(400);
     const ret = {
       error: formatError(
         'in order to publish the latest version must have a repository ' +
           user.name +
           " can't see it"
       ),
-      statusCode: 404,
+      statusCode: 400,
     };
-    res.end(ret.error);
+    res.end(JSON.stringify(ret));
     return ret;
   }
 
@@ -206,7 +209,7 @@ export const writePackage = async (
       ),
       statusCode: 401,
     };
-    res.end(ret.error);
+    res.end(JSON.stringify(ret));
     return ret;
   }
 
