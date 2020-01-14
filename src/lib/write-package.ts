@@ -29,31 +29,17 @@ export const writePackage = async (
   const pubKey = await writePackage.datastore.getPublishKey(token + '');
 
   if (!pubKey) {
-    res.statusMessage = 'token not found';
-    res.status(401);
-    const ret = {error: '{"error":"publish key not found"}', statusCode: 401};
-    res.end(ret.error);
-    return ret;
+    return respondWithError(res, 'publish key not found', 401);
   }
 
   if (pubKey.expiration && pubKey.expiration <= Date.now()) {
-    res.statusMessage = 'token expired';
-    res.status(401);
-    const ret = {error: '{"error":"publish key expired"}', statusCode: 401};
-    res.end(ret.error);
-    return ret;
+    return respondWithError(res, 'publish key expired', 401);
   }
 
   // get the client github user token with pubKey.username
   const user = await writePackage.datastore.getUser(pubKey.username);
   if (!user) {
-    res.status(401);
-    const ret = {
-      error: '{"error":"publish token unauthenticated"}',
-      statusCode: 401,
-    };
-    res.end(ret.error);
-    return ret;
+    return respondWithError(res, 'publish token unauthenticated', 401);
   }
 
   console.info(
@@ -65,18 +51,12 @@ export const writePackage = async (
 
   if (pubKey.package && pubKey.package !== packageName) {
     console.info('401. token cannot publish this package ' + packageName);
-    res.statusMessage = 'token cannot publish this package';
-    res.status(401);
-    const ret = {
-      error: formatError(`
-            This token cannot publish npm package ${packageName} you\'ll need to
-            npm login --registry https://wombat-dressing-room.appspot.com
-            again to publish this package.
-            `),
-      statusCode: 401,
-    };
-    res.end(ret.error);
-    return ret;
+    const msg = `
+    This token cannot publish npm package ${packageName} you\'ll need to
+    npm login --registry ${config.userRegistryUrl}
+    again to publish this package.
+    `;
+    return respondWithError(res, msg, 401);
   }
 
   // fetch existing packument
@@ -98,13 +78,8 @@ export const writePackage = async (
       // not all packages have a latest dist-tag
     } catch (e) {
       console.info('got ' + e + ' parsing publish');
-      res.status(401);
-      const ret = {
-        error: '{"error":"malformed json package document in publish"}',
-        statusCode: 401,
-      };
-      res.end('{"error":"malformed json package document in publish"}');
-      return ret;
+      const msg = 'malformed json package document in publish';
+      return respondWithError(res, msg, 400);
     }
   } else {
     // the package already exists!
@@ -115,32 +90,15 @@ export const writePackage = async (
     console.info('missing latest version for ' + packageName);
     // we need to verify that this package has a repo config that points to
     // github so users don't lock themselves out.
-    res.status(500);
-    const ret = {
-      error: formatError(
-        'not supported yet. package is rather strange. its not new and has no latest version'
-      ),
-      statusCode: 500,
-    };
-    res.end(JSON.stringify(ret));
-    return ret;
+    const msg =
+      'not supported yet. package is rather strange. its not new and has no latest version';
+    return respondWithError(res, msg, 500);
   }
 
   if (!latest.repository) {
     console.info('missing repository in the latest version of ' + packageName);
-    res.statusMessage = 'latest npm version missing github repository';
-    res.statusCode = 400;
-
-    const ret = {
-      error: formatError(
-        'in order to publish the latest version must have a repository ' +
-          user.name +
-          ' can access.'
-      ),
-      statusCode: 400,
-    };
-    res.end(JSON.stringify(ret));
-    return ret;
+    const msg = `in order to publish the latest version must have a repository ${user.name} can access.`;
+    return respondWithError(res, msg, 400);
   }
 
   console.info('latest repo ', latest.repository);
@@ -150,67 +108,31 @@ export const writePackage = async (
   // make sure publish user has permission to publish the package
   // get the github repository from packument
   if (!repo) {
-    console.info('failed to find repository in latest.repository field.')
-    res.status(400);
-    const ret = {
-      error: formatError(
-        'in order to publish the latest version must have a repository on github'
-      ),
-      statusCode: 400,
-    };
-    res.end(JSON.stringify(ret));
-    return ret;
+    console.info('failed to find repository in latest.repository field.');
+    const msg =
+      'In order to publish through wombat the latest version on npm must have a repository pointing to github';
+    return respondWithError(res, msg, 400);
   }
 
   let repoResp = null;
   try {
     repoResp = await github.getRepo(repo.name, user.token);
   } catch (e) {
-    console.info('failed to get repo response for '+repo.name+' '+e)
-    res.status(400);
-    const ret = {
-      error: formatError(
-        'respository ' +
-          repo.url +
-          ' doesnt exist or ' +
-          user.name +
-          ' doesnt have access'
-      ),
-      statusCode: 400,
-    };
-    res.end(JSON.stringify(ret));
-    return ret;
+    console.info('failed to get repo response for ' + repo.name + ' ' + e);
+    const msg = `repository ${repo.url} doesn't exist or ${user.name} doesn't have access.`;
+    return respondWithError(res, msg, 400);
   }
 
   if (!repoResp) {
-    res.status(400);
-    const ret = {
-      error: formatError(
-        'in order to publish the latest version must have a repository ' +
-          user.name +
-          " can't see it"
-      ),
-      statusCode: 400,
-    };
-    res.end(JSON.stringify(ret));
-    return ret;
+    const msg = `in order to publish the latest version must have a repository ${user.name} can't see it`;
+    return respondWithError(res, msg, 400);
   }
 
   console.info('repo response!', repoResp.permissions);
 
   if (!(repoResp.permissions.push || repoResp.permissions.admin)) {
-    res.status(401);
-    const ret = {
-      error: formatError(
-        user.name +
-          ' cannot push repo ' +
-          repo.url +
-          '. push permission required to publish.'
-      ),
-      statusCode: 401,
-    };
-    res.end(JSON.stringify(ret));
-    return ret;
+    const msg = `${user.name} cannot push repo ${repo.url}. push permission required to publish.`;
+    return respondWithError(res, msg, 400);
   }
 
   // If the publication key has been configured with GitHub releases as a
@@ -229,14 +151,7 @@ export const writePackage = async (
         res
       );
     } catch (e) {
-      res.statusCode = e.statusCode;
-      res.statusMessage = e.statusMessage;
-      const ret = {
-        error: JSON.stringify({error: e.statusMessage}),
-        statusCode: e.statusCode,
-      };
-      res.end(ret.error);
-      return ret;
+      return respondWithError(res, e.statusMessage, e.statusCode);
     }
   }
 
@@ -343,8 +258,16 @@ async function enforceMatchingRelease(
   }
 }
 
-// the npm client will print non json errors to the screen in publish.
-// this is a really great way to give detailed error messages
+function respondWithError(res: Response, message: string, code = 400) {
+  res.status(code || 401);
+  const ret = {
+    error: formatError(message),
+    statusCode: 401,
+  };
+  res.json(ret);
+  return ret;
+}
+
 const formatError = (message: string) => {
   return `
   ===============================
