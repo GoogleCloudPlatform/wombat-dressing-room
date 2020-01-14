@@ -12,7 +12,7 @@ npm registry from automated systems. Follow the steps below to generate a token:
 
 ### Generating 24 hour and release-backed tokens
 
-1. set `Wombat Dressing Room` as your default registry, `npm config set registry {registry-href}`.
+1. set `Wombat Dressing Room` as your default registry, `npm config set registry {{registryHref}}`.
 2. `npm login`.
 3. Click the `Create release-backed publication token` or
    `Create 24 hour token` button.

@@ -5,8 +5,9 @@ node_modules
 .nyc_output
 build
 code-workspace
-html/documentation.html
-html/changelog.html
+views/partials/documentation.hbs
+views/partials/changelog.hbs
 .vscode
 config
 coverage
+public/github-markdown.css

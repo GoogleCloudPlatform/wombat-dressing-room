@@ -20,11 +20,12 @@ document.getElementById('logout-link').addEventListener('click', ev => {
 });
 
 async function logout() {
-  response = await fetch('/logout', {method: 'POST'});
+  await fetch('/logout', {method: 'POST'});
   window.location = '/';
 }
 
 // global api object.
+// eslint-disable-next-line no-unused-vars
 const api = {
   tokens: async () => {
     const res = await fetch('/_/api/v1/tokens');

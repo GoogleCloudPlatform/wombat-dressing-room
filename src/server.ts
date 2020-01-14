@@ -15,12 +15,11 @@
  */
 
 import * as express from 'express';
-import * as fs from 'fs';
+import * as path from 'path';
 import * as morgan from 'morgan';
 import * as url from 'url';
-
+import exhbs = require('express-handlebars');
 import * as datastore from './lib/datastore';
-
 import cookieSession = require('cookie-session');
 import * as github from './lib/github';
 import {config} from './lib/config';
@@ -28,52 +27,30 @@ import {totpCode} from './lib/totp-code';
 import * as request from 'request';
 import {require2fa} from './lib/packument';
 import uuid = require('uuid');
-import * as path from 'path';
 import {json} from './lib/json';
 import {drainRequest} from './lib/drain-request';
-
 const validatePackage = require('validate-npm-package-name');
-
 import {publish} from './routes/publish';
 import {putDeleteTag} from './routes/put-delete-tag';
+const unsafe = require('./lib/unsafe.js');
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
-const unsafe = require('./lib/unsafe.js');
+
 const app = express();
 
-const readStatic = (p: string) => {
-  return fs.readFileSync(path.resolve(__dirname + '/../../html', p));
-};
-
-const ghcss = fs.readFileSync(
-  require.resolve('github-markdown-css/github-markdown.css')
+app.engine(
+  '.hbs',
+  exhbs({
+    extname: '.hbs',
+    defaultLayout: 'main',
+    partialsDir: path.join(__dirname, '../../views/partials'),
+    layoutsDir: path.join(__dirname, '../../views/layouts'),
+  })
 );
-const favicon = readStatic('favicon.ico');
-const changelog = readStatic('changelog.html')
-  .toString('utf8')
-  // Reduce the heading level in the CHANGELOG by 1:
-  .replace(/h3/g, 'h4')
-  .replace(/h2/g, 'h3')
-  .replace(/h1/g, 'h2');
-const documentation = readStatic('documentation.html')
-  .toString('utf8')
-  .replace(
-    '{registry-href}',
-    config.userRegistryUrl || 'http://127.0.0.1:8080'
-  );
-const appjs = readStatic('app.js');
-const css = readStatic('app.css');
-const loginPage = readStatic('login.html') + '';
-const tokenSettingsPage = readStatic('token-settings.html') + '';
-const manageTokensPage = readStatic('manage-tokens.html') + '';
+app.set('view engine', '.hbs');
+app.set('views', path.join(__dirname, '../../views'));
 
-const SUFFIX_STRING = '_ns';
-
-let indexHtml = readStatic('index.html') + '';
-// add documentation from rendered markdown:
-indexHtml = indexHtml
-  .replace('{documentation}', documentation)
-  .replace('{changelog}', changelog);
+app.use(express.static('public'));
 
 const uuidregex = /[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/gi;
 morgan.token('cleanurl', (req: express.Request) =>
@@ -86,6 +63,10 @@ app.use(
     {stream: process.stdout}
   )
 );
+
+app.get('/changelog', (req, res) => {
+  res.render('changelog', {title: 'Changelog'});
+});
 
 app.use((req, res, next) => {
   // handle namespaces
@@ -108,21 +89,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-const serve = (p: string, data: string | Buffer, loginServer?: boolean) => {
-  app.get(p, (req, res) => {
-    if (loginServer && !config.loginEnabled) {
-      res.statusCode = 401;
-      return res.end();
-    }
-    res.end(data);
-  });
-};
-
-serve('/favicon.ico', favicon);
-serve('/app.js', appjs);
-serve('/github-markdown.css', ghcss);
-serve('/app.css', css);
 
 // whoami
 app.get(
@@ -272,17 +238,21 @@ app.get(
     res.header('Content-type', 'text/html');
 
     if (req.session!.token) {
-      let page = indexHtml + '';
-      page = page.replace('{username}', req.session!.user.login);
-      res.end(page);
+      res.render('index', {
+        username: req.session!.user.login,
+        registryHref: config.userRegistryUrl || 'http://127.0.0.1:8080',
+        title: 'Home',
+      });
     } else {
-      const {link, code} = github.webAccessLink(
+      const {link} = github.webAccessLink(
         config.githubId,
         config.githubSecret,
         []
       );
-      const page = loginPage.replace('{link}', link);
-      res.end(page);
+      res.render('login', {
+        link,
+        title: 'Login',
+      });
     }
   })
 );
@@ -415,10 +385,11 @@ app.get(
     if (redirectToLoginServer(req, res)) {
       return;
     }
-
     res.header('content-type', 'text/html');
     res.header('x-frame-options', 'deny');
-    res.end(tokenSettingsPage);
+    res.render('token-settings', {
+      title: 'Token Settings',
+    });
   })
 );
 
@@ -438,12 +409,12 @@ app.get(
       return;
     }
 
-    let page = manageTokensPage + '';
-    page = page.replace('{username}', req.session!.user.login);
-
     res.header('x-frame-options', 'deny');
     res.header('content-type', 'text/html');
-    res.end(page);
+    res.render('manage-tokens', {
+      username: req.session!.user.login,
+      title: 'Manage Tokens',
+    });
   })
 );
 
