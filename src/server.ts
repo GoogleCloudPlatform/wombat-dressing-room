@@ -64,6 +64,10 @@ app.use(
   )
 );
 
+app.get('/changelog', (req, res) => {
+  res.render('changelog', {title: 'Changelog'});
+});
+
 app.use((req, res, next) => {
   // handle namespaces
   const matches = req.url.match(/^(.+)(\/_ns\/|\/_ns$)/);
