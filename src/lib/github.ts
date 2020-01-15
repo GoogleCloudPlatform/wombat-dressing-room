@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import {resolve} from 'path';
 import {URL} from 'url';
-
 const gh = require('octonode');
 
 let clientOptions: {} | undefined;
@@ -137,12 +135,12 @@ export interface GhUser {
   login: string;
   name: string;
   avatar_url: string;
+  html_url: string;
 }
 
 export interface GhRepo {
   name: string;
   full_name: string;
-
   private: boolean;
   permissions: {push: boolean; admin: boolean; pull: boolean};
 }
