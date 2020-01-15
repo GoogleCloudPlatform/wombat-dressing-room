@@ -1,4 +1,4 @@
-.coverage
+coverage/
 .github
 CONTRIBUTING.md
 CHANGELOG.md
@@ -6,4 +6,3 @@ CODE_OF_CONDUCT.md
 views/partials/documentation.hbs
 views/partials/changelog.hbs
 public/github-markdown.css
-coverage/
