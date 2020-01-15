@@ -11,6 +11,14 @@ import {writePackage, WriteResponse} from '../../src/lib/write-package';
 
 nock.disableNetConnect();
 
+function mockResponse() {
+  return {
+    status: (code: number) => {},
+    end: () => {},
+    json: () => {},
+  } as Response;
+}
+
 // TODO: rather than silencing info level logging, let's consider moving to
 // a logger like winston or bunyan, which is easier to turn off in tests.
 console.info = () => {};
@@ -23,7 +31,7 @@ describe('writePackage', () => {
       },
     });
     const req = {headers: {authorization: 'token: abc123'}} as Request;
-    const res = {status: (code: number) => {}, end: () => {}} as Response;
+    const res = mockResponse();
     const ret = await writePackage('@soldair/foo', req, res);
     expect(ret.statusCode).to.equal(401);
     expect(ret.error).to.match(/publish key not found/);
@@ -52,7 +60,7 @@ describe('writePackage', () => {
         .addVersion('1.0.0')
         .packument()
     );
-    const res = {status: (code: number) => {}, end: () => {}} as Response;
+    const res = mockResponse();
 
     // A 404 while fetching the packument indicates that the package
     // has not yet been created:
@@ -100,7 +108,7 @@ describe('writePackage', () => {
           .addVersion('1.0.0', 'https://github.com/foo/bar')
           .packument()
       );
-      const res = {status: (code: number) => {}, end: () => {}} as Response;
+      const res = mockResponse();
 
       // A 404 while fetching the packument indicates that the package
       // has not yet been created:
@@ -156,7 +164,7 @@ describe('writePackage', () => {
           .addVersion('1.0.0', 'https://github.com/foo/bar')
           .packument()
       );
-      const res = {status: (code: number) => {}, end: () => {}} as Response;
+      const res = mockResponse();
 
       const npmRequest = nock('https://registry.npmjs.org')
         .get('/@soldair%2ffoo')
@@ -213,7 +221,7 @@ describe('writePackage', () => {
         {authorization: 'token: abc123'},
         '0.2.3'
       );
-      const res = {status: (code: number) => {}, end: () => {}} as Response;
+      const res = mockResponse();
 
       // A 404 while fetching the packument indicates that the package
       // has not yet been created:
@@ -271,7 +279,7 @@ describe('writePackage', () => {
           .addVersion('1.0.0', 'https://github.com/foo/bar')
           .packument()
       );
-      const res = {status: (code: number) => {}, end: () => {}} as Response;
+      const res = mockResponse();
 
       const npmRequest = nock('https://registry.npmjs.org')
         .get('/@soldair%2ffoo')
