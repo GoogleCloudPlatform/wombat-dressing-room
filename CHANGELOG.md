@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented here.
 
+### [1.0.1](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v1.0.0...v1.0.1) (2020-01-15)
+
+
+### Bug Fixes
+
+* fixing repo related publish errors ([#46](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/46)) ([d9d7049](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/d9d7049b304895fa1afd5be7788815032f8a07c3))
+
 ## 1.0.0 (2020-01-11)
 
 
