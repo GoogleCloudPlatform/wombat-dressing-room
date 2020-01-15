@@ -14,32 +14,35 @@
  * limitations under the License.
  */
 
+import {EventEmitter} from 'events';
+import {GhUser} from './github';
+
 // userland types bug. this is the only documented way to clear the session.
-const clearSession = req => {
-  if (req) req.session = null;
+export const clearSession = (req: Express.Request) => {
+  if (req) {
+    // tslint:disable-next-line no-any
+    (req.session as any) = null;
+  }
 };
-module.exports.clearSession = clearSession;
 
 //userland type doesnt include user.url
-const ghUserData = user => {
-  if (user)
+export const ghUserData = (user: GhUser) => {
+  if (user) {
     return {
       avatar_url: user.avatar_url,
       html_url: user.html_url,
       name: user.name,
       login: user.login,
     };
+  }
   return {};
 };
 
-module.exports.ghUserData = ghUserData;
-
 //debug helper
-const logEmit = emitter => {
+export const logEmit = (emitter: EventEmitter) => {
   const oem = emitter.emit;
-  emitter.emit = function(ev) {
+  emitter.emit = function(ev: string, ...args: Array<{}>) {
     console.log(ev);
-    return oem.apply(this, arguments);
+    return oem.apply(this, [ev, ...args]);
   };
 };
-module.exports.logEmit = logEmit;

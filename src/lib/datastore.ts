@@ -18,7 +18,6 @@ import {Datastore} from '@google-cloud/datastore';
 import * as uuid from 'uuid';
 
 import {config} from './config';
-
 const isUUID = require('is-uuid');
 
 const FIVE_MINUTES = 1000 * 60 * 5;

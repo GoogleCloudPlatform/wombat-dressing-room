@@ -14,25 +14,27 @@
  * limitations under the License.
  */
 
-import * as express from 'express';
 import * as path from 'path';
-import * as morgan from 'morgan';
 import * as url from 'url';
-import exhbs = require('express-handlebars');
-import * as datastore from './lib/datastore';
+import * as morgan from 'morgan';
+import * as express from 'express';
+import * as exhbs from 'express-handlebars';
 import cookieSession = require('cookie-session');
+import * as request from 'request';
+import uuid = require('uuid');
+import * as validatePackage from 'validate-npm-package-name';
+
+import * as datastore from './lib/datastore';
+import {drainRequest} from './lib/drain-request';
 import * as github from './lib/github';
 import {config} from './lib/config';
-import {totpCode} from './lib/totp-code';
-import * as request from 'request';
-import {require2fa} from './lib/packument';
-import uuid = require('uuid');
 import {json} from './lib/json';
-import {drainRequest} from './lib/drain-request';
-const validatePackage = require('validate-npm-package-name');
+import {require2fa} from './lib/packument';
+import {totpCode} from './lib/totp-code';
+import * as unsafe from './lib/unsafe';
+
 import {publish} from './routes/publish';
 import {putDeleteTag} from './routes/put-delete-tag';
-const unsafe = require('./lib/unsafe.js');
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
 
