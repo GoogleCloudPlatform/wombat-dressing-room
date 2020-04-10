@@ -15,6 +15,8 @@
  */
 
 import {URL} from 'url';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const gh = require('octonode');
 
 let clientOptions: {} | undefined;
@@ -102,7 +104,7 @@ export const webAccessToken = (
         id: appid,
         secret: appsecret,
       })
-      .login(code, (err: Error | undefined, token: string, headers: {}) => {
+      .login(code, (err: Error | undefined, token: string) => {
         if (err) return reject(err);
         resolve(token);
       });

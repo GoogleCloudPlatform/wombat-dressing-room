@@ -16,6 +16,7 @@
 
 import {expect} from 'chai';
 import * as nock from 'nock';
+import {describe, it} from 'mocha';
 import * as github from '../../src/lib/github';
 
 nock.disableNetConnect();
@@ -28,6 +29,7 @@ describe('github', () => {
         .reply(200, {tag_name: 'v1.0.2'});
       const latest = await github.getLatestRelease('bcoe/test', 'abc123');
       expect(latest).to.equal('v1.0.2');
+      request.done();
     });
 
     it('bubbles error appropriately', async () => {
@@ -44,6 +46,7 @@ describe('github', () => {
       if (err) {
         expect(err.message).to.include('Release info error');
       }
+      request.done();
     });
   });
 });

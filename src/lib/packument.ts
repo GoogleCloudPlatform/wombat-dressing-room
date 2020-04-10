@@ -19,7 +19,7 @@ import * as request from 'request';
 import {URL} from 'url';
 import {json} from './json';
 
-const parseGh = require('github-url-from-git');
+import parseGh = require('github-url-from-git');
 let registryUrl = 'https://registry.npmjs.org';
 
 // this only fetches public packuments.

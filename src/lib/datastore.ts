@@ -18,7 +18,7 @@ import {Datastore} from '@google-cloud/datastore';
 import * as uuid from 'uuid';
 
 import {config} from './config';
-const isUUID = require('is-uuid');
+import isUUID = require('is-uuid');
 
 const FIVE_MINUTES = 1000 * 60 * 5;
 
@@ -230,7 +230,7 @@ export const deletePublishKey = async (token: string) => {
 
 export type User =
   | {
-      // tslint:disable-next-line:no-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       [k: string]: any;
     }
   | UserMain;
