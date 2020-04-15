@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented here.
 
+### [1.0.2](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v1.0.1...v1.0.2) (2020-04-15)
+
+
+### Bug Fixes
+
+* login was broken due to missing JS import ([#51](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/51)) ([571e124](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/571e12419e926814bba262abfb5c94770147d933))
+* **deps:** update dependency express-handlebars to v4 ([#61](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/61)) ([9a84725](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/9a84725b06b91150773c2ababab92f775cf2cbd1))
+* **deps:** update dependency uuid to v7 ([#57](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/57)) ([5a6ff4e](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/5a6ff4e0c516fd13a545e56890f0d2a341a46c67))
+
 ### [1.0.1](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v1.0.0...v1.0.1) (2020-01-15)
 
 
