@@ -20,8 +20,7 @@ import {GhUser} from './github';
 // userland types bug. this is the only documented way to clear the session.
 export const clearSession = (req: Express.Request) => {
   if (req) {
-    // tslint:disable-next-line no-any
-    (req.session as any) = null;
+    req.session = null;
   }
 };
 
@@ -41,7 +40,7 @@ export const ghUserData = (user: GhUser) => {
 //debug helper
 export const logEmit = (emitter: EventEmitter) => {
   const oem = emitter.emit;
-  emitter.emit = function(ev: string, ...args: Array<{}>) {
+  emitter.emit = function (ev: string, ...args: Array<{}>) {
     console.log(ev);
     return oem.apply(this, [ev, ...args]);
   };

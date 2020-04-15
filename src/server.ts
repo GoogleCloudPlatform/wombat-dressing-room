@@ -111,7 +111,7 @@ app.get(
 app.post(
   '/_/2fa',
   wrap(async (req, res) => {
-    const packageName = req.query.packageName || '';
+    const packageName = (req.query.packageName as string) || '';
     let result: {status: number; data: Buffer} | undefined;
     try {
       result = await require2fa(
@@ -161,6 +161,7 @@ app.post(
 app.get(
   '/_/done',
   wrap(async (req, res) => {
+    // eslint-disable-next-line node/no-deprecated-api
     const parsed = url.parse(req.url, true);
     const query = parsed.query || {};
 
@@ -283,7 +284,7 @@ app.get(
       const token = await github.webAccessToken(
         config.githubId,
         config.githubSecret,
-        req.query.code
+        (req.query.code as {}) as string
       );
 
       const query = req.session!.query;
@@ -319,6 +320,7 @@ app.get(
 app.get(
   '/_/done',
   wrap(async (req, res) => {
+    // eslint-disable-next-line node/no-deprecated-api
     const parsed = url.parse(req.url, true);
     const query = parsed.query || {};
 
@@ -352,7 +354,10 @@ app.get(
       ttl = Date.now() + ONE_DAY;
     } else if (req.query.type === 'release') {
       releaseAs2FA = true;
-    } else if (!req.query.package || !req.query.package.trim().length) {
+    } else if (
+      !req.query.package ||
+      !(req.query.package as string).trim().length
+    ) {
       res.statusCode = 400;
       return res.end('"package name required."');
     }
@@ -616,7 +621,7 @@ function avoidCSRF(req: express.Request, res: express.Response) {
   return false;
 }
 
-app.put(/^\/[^\/]+$/, wrap(publish));
+app.put(/^\/[^/]+$/, wrap(publish));
 app.put('/-/package/:package/dist-tags/:tag', wrap(putDeleteTag));
 app.delete('/-/package/:package/dist-tags/:tag', wrap(putDeleteTag));
 

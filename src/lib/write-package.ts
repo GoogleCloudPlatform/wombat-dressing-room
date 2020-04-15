@@ -68,7 +68,7 @@ export const writePackage = async (
   if (pubKey.package && pubKey.package !== packageName) {
     console.info('401. token cannot publish this package ' + packageName);
     const msg = `
-    This token cannot publish npm package ${packageName} you\'ll need to
+    This token cannot publish npm package ${packageName} you'll need to
     npm login --registry ${config.userRegistryUrl}
     again to publish this package.
     `;
@@ -162,9 +162,7 @@ export const writePackage = async (
         repo.name,
         user.token,
         newPackage ? undefined : doc,
-        drainedBody,
-        req,
-        res
+        drainedBody
       );
     } catch (e) {
       return respondWithError(res, e.statusMessage, e.statusCode);
@@ -209,7 +207,7 @@ writePackage.pipeToNpm = (
     console.info('error sending response for npm publish', e);
   });
 
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     npmreq.on('response', async npmres => {
       resolve({statusCode: npmres.statusCode, newPackage});
     });
@@ -224,9 +222,7 @@ async function enforceMatchingRelease(
   repoName: string,
   token: string,
   lastPackument: Packument | undefined,
-  drainedBody: Buffer,
-  req: Request,
-  res: Response
+  drainedBody: Buffer
 ) {
   try {
     const maybePackument = JSON.parse(drainedBody + '');

@@ -17,6 +17,7 @@
 import {expect} from 'chai';
 import {Request, Response} from 'express';
 import * as nock from 'nock';
+import {describe, it} from 'mocha';
 
 import {createPackument} from '../helpers/create-packument';
 import {writePackageRequest} from '../helpers/write-package-request';
@@ -72,9 +73,7 @@ describe('writePackage', () => {
     // Simulate a publication request to the proxy:
     const req = writePackageRequest(
       {authorization: 'token: abc123'},
-      createPackument('@soldair/foo')
-        .addVersion('1.0.0')
-        .packument()
+      createPackument('@soldair/foo').addVersion('1.0.0').packument()
     );
     const res = mockResponse();
 
