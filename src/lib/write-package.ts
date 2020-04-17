@@ -235,9 +235,23 @@ async function enforceMatchingRelease(
         400
       );
     }
+    // Check whether the publish document contains either a
+    // "latest" or "next" tag:
     const newPackument = maybePackument as Packument;
-    let newVersion =
-      newPackument.versions[newPackument['dist-tags'].latest || ''].version;
+    let newVersionPackument =
+      newPackument.versions[newPackument['dist-tags'].latest || ''];
+    if (!newVersionPackument) {
+      newVersionPackument =
+        newPackument.versions[newPackument['dist-tags'].next || ''];
+    }
+    if (!newVersionPackument) {
+      throw new WombatServerError(
+        'No "latest" or "next" version found in packument.',
+        400
+      );
+    }
+    let newVersion = newVersionPackument.version;
+
     // If this is not the first package publication, we infer the version being
     // published by comparing the new and old packument:
     if (lastPackument) {
@@ -254,11 +268,9 @@ async function enforceMatchingRelease(
         newVersion = versions[0];
       }
     }
-    const latestRelease = await github.getLatestRelease(repoName, token);
-    if (latestRelease !== `v${newVersion}`) {
-      console.info(
-        `latestRelease = ${latestRelease} newVersion = ${newVersion}`
-      );
+    try {
+      await github.getRelease(repoName, token, `v${newVersion}`);
+    } catch (err) {
       const msg = `matching release v${newVersion} not found for ${repoName}`;
       throw new WombatServerError(msg, 400);
     }
