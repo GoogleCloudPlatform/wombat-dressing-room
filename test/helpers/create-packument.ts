@@ -19,8 +19,10 @@ import {Packument, PackumentVersion, Repository} from '@npm/types';
 class PackumentBuilder {
   versions: PackumentVersion[] = [];
   name: string;
-  constructor(name: string) {
+  tag: string;
+  constructor(name: string, tag = 'latest') {
     this.name = name;
+    this.tag = tag;
   }
   addVersion(
     versionNumber: string,
@@ -52,12 +54,15 @@ class PackumentBuilder {
     } as Packument;
     for (const version of this.versions) {
       packument.versions[version.version] = version;
-      packument['dist-tags'].latest = version.version;
+      packument['dist-tags'][this.tag] = version.version;
     }
     return packument;
   }
 }
 
-export function createPackument(name: string): PackumentBuilder {
-  return new PackumentBuilder(name);
+export function createPackument(
+  name: string,
+  tag = 'latest'
+): PackumentBuilder {
+  return new PackumentBuilder(name, tag);
 }

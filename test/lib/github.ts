@@ -25,20 +25,20 @@ describe('github', () => {
   describe('getLatestRelease', () => {
     it('returns latest release from GitHub', async () => {
       const request = nock('https://api.github.com')
-        .get('/repos/bcoe/test/releases/latest')
+        .get('/repos/bcoe/test/releases/tags/v1.0.2')
         .reply(200, {tag_name: 'v1.0.2'});
-      const latest = await github.getLatestRelease('bcoe/test', 'abc123');
+      const latest = await github.getRelease('bcoe/test', 'abc123', 'v1.0.2');
       expect(latest).to.equal('v1.0.2');
       request.done();
     });
 
     it('bubbles error appropriately', async () => {
       const request = nock('https://api.github.com')
-        .get('/repos/bcoe/test/releases/latest')
+        .get('/repos/bcoe/test/releases/tags/v1.0.2')
         .reply(404);
       let err: Error | undefined = undefined;
       try {
-        await github.getLatestRelease('bcoe/test', 'abc123');
+        await github.getRelease('bcoe/test', 'abc123', 'v1.0.2');
       } catch (_err) {
         err = _err;
       }
