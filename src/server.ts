@@ -15,7 +15,7 @@
  */
 
 import * as path from 'path';
-import * as url from 'url';
+import {URL} from 'url';
 import * as morgan from 'morgan';
 import * as express from 'express';
 import * as exhbs from 'express-handlebars';
@@ -161,11 +161,10 @@ app.post(
 app.get(
   '/_/done',
   wrap(async (req, res) => {
-    // eslint-disable-next-line node/no-deprecated-api
-    const parsed = url.parse(req.url, true);
-    const query = parsed.query || {};
-
-    const handoff = await datastore.getHandoffKey(query.ott + '');
+    const parsed = new URL(req.url);
+    const handoff = await datastore.getHandoffKey(
+      parsed.searchParams.get('ott')!
+    );
     if (!handoff) {
       // to prevent the cli form falling back to couchdb auth we send a
       // 200 but no token. this leaves quite a bit to be desired as far as
@@ -320,11 +319,10 @@ app.get(
 app.get(
   '/_/done',
   wrap(async (req, res) => {
-    // eslint-disable-next-line node/no-deprecated-api
-    const parsed = url.parse(req.url, true);
-    const query = parsed.query || {};
-
-    const handoff = await datastore.getHandoffKey(query.ott + '');
+    const parsed = new URL(req.url);
+    const handoff = await datastore.getHandoffKey(
+      parsed.searchParams.get('ott')!
+    );
     if (!handoff) {
       res.statusCode = 404;
       return res.end();
