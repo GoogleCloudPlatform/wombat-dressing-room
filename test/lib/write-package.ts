@@ -30,7 +30,10 @@ nock.disableNetConnect();
 
 function mockResponse() {
   return {
-    status: (code: number) => {},
+    status: (code: number) => {
+      code;
+      return;
+    },
     end: () => {},
     json: () => {},
   } as Response;
@@ -44,6 +47,7 @@ describe('writePackage', () => {
   it('responds with 401 if publication key not found in datastore', async () => {
     writePackage.datastore = Object.assign({}, datastore, {
       getPublishKey: async (username: string): Promise<PublishKey | false> => {
+        username;
         return false;
       },
     });
@@ -58,6 +62,7 @@ describe('writePackage', () => {
     // Fake that there's a releaseAs2FA key in datastore:
     writePackage.datastore = Object.assign({}, datastore, {
       getPublishKey: async (username: string): Promise<PublishKey | false> => {
+        username;
         return {
           username: 'bcoe',
           created: 1578630249529,
@@ -66,6 +71,7 @@ describe('writePackage', () => {
         };
       },
       getUser: async (username: string): Promise<false | User> => {
+        username;
         return {name: 'bcoe', token: 'deadbeef'};
       },
     });
@@ -96,6 +102,7 @@ describe('writePackage', () => {
         getPublishKey: async (
           username: string
         ): Promise<PublishKey | false> => {
+          username;
           return {
             username: 'bcoe',
             created: 1578630249529,
@@ -104,6 +111,7 @@ describe('writePackage', () => {
           };
         },
         getUser: async (username: string): Promise<false | User> => {
+          username;
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
@@ -152,6 +160,7 @@ describe('writePackage', () => {
         getPublishKey: async (
           username: string
         ): Promise<PublishKey | false> => {
+          username;
           return {
             username: 'bcoe',
             created: 1578630249529,
@@ -160,6 +169,7 @@ describe('writePackage', () => {
           };
         },
         getUser: async (username: string): Promise<false | User> => {
+          username;
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
@@ -211,6 +221,7 @@ describe('writePackage', () => {
         getPublishKey: async (
           username: string
         ): Promise<PublishKey | false> => {
+          username;
           return {
             username: 'bcoe',
             created: 1578630249529,
@@ -219,6 +230,7 @@ describe('writePackage', () => {
           };
         },
         getUser: async (username: string): Promise<false | User> => {
+          username;
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
@@ -270,6 +282,7 @@ describe('writePackage', () => {
         getPublishKey: async (
           username: string
         ): Promise<PublishKey | false> => {
+          username;
           return {
             username: 'bcoe',
             created: 1578630249529,
@@ -278,6 +291,7 @@ describe('writePackage', () => {
           };
         },
         getUser: async (username: string): Promise<false | User> => {
+          username;
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
@@ -326,6 +340,7 @@ describe('writePackage', () => {
         getPublishKey: async (
           username: string
         ): Promise<PublishKey | false> => {
+          username;
           return {
             username: 'bcoe',
             created: 1578630249529,
@@ -334,6 +349,7 @@ describe('writePackage', () => {
           };
         },
         getUser: async (username: string): Promise<false | User> => {
+          username;
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
