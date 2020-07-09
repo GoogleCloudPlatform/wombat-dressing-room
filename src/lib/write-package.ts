@@ -119,12 +119,12 @@ export const writePackage = async (
 
   console.info('latest repo ', latest.repository);
 
-  const repo = repoToGithub(latest.repository);
+  const repo = repoToGithub((latest as any).permsRepo||latest.repository);
 
   // make sure publish user has permission to publish the package
   // get the github repository from packument
   if (!repo) {
-    console.info('failed to find repository in latest.repository field.');
+    console.info('failed to find repository in latest.repository or latest.permsRepo field.');
     const msg =
       'In order to publish through wombat the latest version on npm must have a repository pointing to github';
     return respondWithError(res, msg, 400);
