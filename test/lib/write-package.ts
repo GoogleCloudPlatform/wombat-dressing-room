@@ -30,8 +30,7 @@ nock.disableNetConnect();
 
 function mockResponse() {
   return {
-    status: (code: number) => {
-      code;
+    status: (_code: number) => {
       return;
     },
     end: () => {},
