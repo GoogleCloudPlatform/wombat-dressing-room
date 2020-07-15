@@ -118,7 +118,7 @@ export const writePackage = async (
   }
 
   console.info('latest repo ', latest.repository);
-  //tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const repo = repoToGithub((latest as any).permsRepo || latest.repository);
 
   // make sure publish user has permission to publish the package
