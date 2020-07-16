@@ -30,7 +30,9 @@ nock.disableNetConnect();
 
 function mockResponse() {
   return {
-    status: (code: number) => {},
+    status: (_code: number) => {
+      return;
+    },
     end: () => {},
     json: () => {},
   } as Response;
@@ -43,7 +45,7 @@ console.info = () => {};
 describe('writePackage', () => {
   it('responds with 401 if publication key not found in datastore', async () => {
     writePackage.datastore = Object.assign({}, datastore, {
-      getPublishKey: async (username: string): Promise<PublishKey | false> => {
+      getPublishKey: async (_username: string): Promise<PublishKey | false> => {
         return false;
       },
     });
@@ -57,7 +59,7 @@ describe('writePackage', () => {
   it('responds with 400 if packument has no repository field', async () => {
     // Fake that there's a releaseAs2FA key in datastore:
     writePackage.datastore = Object.assign({}, datastore, {
-      getPublishKey: async (username: string): Promise<PublishKey | false> => {
+      getPublishKey: async (_username: string): Promise<PublishKey | false> => {
         return {
           username: 'bcoe',
           created: 1578630249529,
@@ -65,7 +67,7 @@ describe('writePackage', () => {
           releaseAs2FA: true,
         };
       },
-      getUser: async (username: string): Promise<false | User> => {
+      getUser: async (_username: string): Promise<false | User> => {
         return {name: 'bcoe', token: 'deadbeef'};
       },
     });
@@ -94,7 +96,7 @@ describe('writePackage', () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
         getPublishKey: async (
-          username: string
+          _username: string
         ): Promise<PublishKey | false> => {
           return {
             username: 'bcoe',
@@ -103,7 +105,7 @@ describe('writePackage', () => {
             releaseAs2FA: true,
           };
         },
-        getUser: async (username: string): Promise<false | User> => {
+        getUser: async (_username: string): Promise<false | User> => {
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
@@ -150,7 +152,7 @@ describe('writePackage', () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
         getPublishKey: async (
-          username: string
+          _username: string
         ): Promise<PublishKey | false> => {
           return {
             username: 'bcoe',
@@ -159,7 +161,7 @@ describe('writePackage', () => {
             releaseAs2FA: true,
           };
         },
-        getUser: async (username: string): Promise<false | User> => {
+        getUser: async (_username: string): Promise<false | User> => {
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
@@ -209,7 +211,7 @@ describe('writePackage', () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
         getPublishKey: async (
-          username: string
+          _username: string
         ): Promise<PublishKey | false> => {
           return {
             username: 'bcoe',
@@ -218,7 +220,7 @@ describe('writePackage', () => {
             releaseAs2FA: true,
           };
         },
-        getUser: async (username: string): Promise<false | User> => {
+        getUser: async (_username: string): Promise<false | User> => {
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
@@ -268,7 +270,7 @@ describe('writePackage', () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
         getPublishKey: async (
-          username: string
+          _username: string
         ): Promise<PublishKey | false> => {
           return {
             username: 'bcoe',
@@ -277,7 +279,7 @@ describe('writePackage', () => {
             releaseAs2FA: true,
           };
         },
-        getUser: async (username: string): Promise<false | User> => {
+        getUser: async (_username: string): Promise<false | User> => {
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
@@ -324,7 +326,7 @@ describe('writePackage', () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
         getPublishKey: async (
-          username: string
+          _username: string
         ): Promise<PublishKey | false> => {
           return {
             username: 'bcoe',
@@ -333,7 +335,7 @@ describe('writePackage', () => {
             releaseAs2FA: true,
           };
         },
-        getUser: async (username: string): Promise<false | User> => {
+        getUser: async (_username: string): Promise<false | User> => {
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
