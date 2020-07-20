@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Packument} from '@npm/types';
+import {Packument, PackumentVersion} from '@npm/types';
 import {Request, Response} from 'express';
 import * as request from 'request';
 
@@ -25,7 +25,12 @@ import {totpCode} from '../lib/totp-code';
 
 import * as datastore from './datastore';
 import {newVersions} from './new-versions';
-import {findLatest, packument, repoToGithub} from './packument';
+import {
+  findLatest,
+  packument,
+  repoToGithub,
+  PackumentVersionWombat,
+} from './packument';
 import {WombatServerError} from './wombat-server-error';
 
 export interface WriteResponse {
@@ -90,7 +95,9 @@ export const writePackage = async (
     // permissions
     try {
       doc = JSON.parse(drainedBody + '') as Packument;
-      latest = doc.versions[doc['dist-tags'].latest || ''];
+      latest = doc.versions[
+        doc['dist-tags'].latest || ''
+      ] as PackumentVersionWombat;
       // not all packages have a latest dist-tag
     } catch (e) {
       console.info('got ' + e + ' parsing publish');
@@ -111,15 +118,15 @@ export const writePackage = async (
     return respondWithError(res, msg, 500);
   }
 
-  if (!latest.repository) {
+  if (!latest.repository && !latest.permsRepo) {
     console.info('missing repository in the latest version of ' + packageName);
     const msg = `in order to publish the latest version must have a repository ${user.name} can access.`;
     return respondWithError(res, msg, 400);
   }
 
-  console.info('latest repo ', latest.repository);
+  console.info('latest repo ', latest.permsRepo ?? latest.repository);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const repo = repoToGithub((latest as any).permsRepo || latest.repository);
+  const repo = repoToGithub(latest.permsRepo ?? latest.repository);
 
   // make sure publish user has permission to publish the package
   // get the github repository from packument
