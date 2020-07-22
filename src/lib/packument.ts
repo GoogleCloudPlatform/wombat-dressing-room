@@ -22,6 +22,10 @@ import {json} from './json';
 import parseGh = require('github-url-from-git');
 let registryUrl = 'https://registry.npmjs.org';
 
+export interface PackumentVersionWombat extends PackumentVersion {
+  permsRepo?: string;
+}
+
 // this only fetches public packuments.
 // if we passed auth it could fetch any the publish user has access to.
 export const packument = (name: string): Promise<Packument | false> => {
@@ -71,7 +75,9 @@ export const repoToGithub = (
   return false;
 };
 
-export const findLatest = (doc: Packument): PackumentVersion | undefined => {
+export const findLatest = (
+  doc: Packument
+): PackumentVersionWombat | undefined => {
   const latest = doc['dist-tags'] ? doc['dist-tags'].latest : false;
   if (!latest) {
     let newestVersion = '';
@@ -84,9 +90,11 @@ export const findLatest = (doc: Packument): PackumentVersion | undefined => {
       const t = new Date(doc.time[version]).getTime();
       if (t >= versionDate) newestVersion = version;
     });
-    return doc.versions ? doc.versions[newestVersion] : undefined;
+    return doc.versions
+      ? (doc.versions[newestVersion] as PackumentVersionWombat)
+      : undefined;
   }
-  return doc.versions[latest];
+  return doc.versions[latest] as PackumentVersionWombat;
 };
 
 export const setRegistryUrl = (url: string) => {
