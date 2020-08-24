@@ -46,7 +46,7 @@
     "@types/validate-npm-package-name": "^3.0.0",
     "c8": "^7.0.0",
     "chai": "^4.2.0",
-    "codecov": "^3.6.5",
+    "codecov": "^3.7.1",
     "cross-env": "^7.0.0",
     "github-markdown-css": "^4.0.0",
     "gts": "^2.0.0",
