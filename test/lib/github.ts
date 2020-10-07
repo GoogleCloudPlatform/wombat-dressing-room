@@ -25,8 +25,9 @@ describe('github', () => {
   describe('getLatestRelease', () => {
     it('returns latest release from GitHub', async () => {
       const request = nock('https://api.github.com')
-        .get('/repos/bcoe/test/releases/tags/v1.0.2')
-        .reply(200, {tag_name: 'v1.0.2'});
+        .get('/repos/bcoe/test/tags?per_page=100')
+        .reply(200, [{name: 'v1.0.2'}]);
+
       const latest = await github.getRelease('bcoe/test', 'abc123', 'v1.0.2');
       expect(latest).to.equal('v1.0.2');
       request.done();
@@ -34,7 +35,7 @@ describe('github', () => {
 
     it('bubbles error appropriately', async () => {
       const request = nock('https://api.github.com')
-        .get('/repos/bcoe/test/releases/tags/v1.0.2')
+        .get('/repos/bcoe/test/tags?per_page=100')
         .reply(404);
       let err: Error | undefined = undefined;
       try {
@@ -44,7 +45,7 @@ describe('github', () => {
       }
       expect(err).to.not.equal(undefined);
       if (err) {
-        expect(err.message).to.include('Release info error');
+        expect(err.message).to.include('unexpected http code');
       }
       request.done();
     });
