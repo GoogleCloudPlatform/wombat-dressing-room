@@ -80,7 +80,7 @@ export const getRelease = (
             return item.name === tag;
           })
         ) {
-          return reject(Error('not found'));
+          return reject(new Error('not found'));
         } else {
           return resolve(tag);
         }
