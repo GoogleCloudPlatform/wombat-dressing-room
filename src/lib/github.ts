@@ -74,7 +74,7 @@ export const getRelease = (
         if (err) {
           return reject(err);
         } else if (code !== 200)
-          return reject(Error(`unexpected http code = ${code}`));
+          return reject(new Error(`unexpected http code = ${code}`));
         else if (
           !resp.find(item => {
             return item.name === tag;
