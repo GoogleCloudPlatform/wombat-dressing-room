@@ -66,12 +66,27 @@ export const getRelease = (
   tag: string
 ): Promise<string> => {
   const client = gh.client(token, clientOptions);
-  return client
-    .release(name, `tags/${tag}`)
-    .infoAsync()
-    .then((release: Array<{[key: string]: string}>) => {
-      return release[0].tag_name;
-    });
+  return new Promise((resolve, reject) => {
+    client.get(
+      `/repos/${name}/tags`,
+      {per_page: 100},
+      (err: Error, code: number, resp: [{name: string}]) => {
+        if (err) {
+          return reject(err);
+        } else if (code !== 200)
+          return reject(new Error(`unexpected http code = ${code}`));
+        else if (
+          !resp.find(item => {
+            return item.name === tag;
+          })
+        ) {
+          return reject(new Error('not found'));
+        } else {
+          return resolve(tag);
+        }
+      }
+    );
+  });
 };
 
 /**

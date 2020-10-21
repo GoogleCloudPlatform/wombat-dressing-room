@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Packument, PackumentVersion} from '@npm/types';
+import {Packument} from '@npm/types';
 import {Request, Response} from 'express';
 import * as request from 'request';
 
