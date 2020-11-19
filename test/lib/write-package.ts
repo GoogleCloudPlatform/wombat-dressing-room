@@ -30,6 +30,7 @@ nock.disableNetConnect();
 
 function mockResponse() {
   return {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     status: (_code: number) => {
       return;
     },
@@ -45,7 +46,7 @@ console.info = () => {};
 describe('writePackage', () => {
   it('responds with 401 if publication key not found in datastore', async () => {
     writePackage.datastore = Object.assign({}, datastore, {
-      getPublishKey: async (_username: string): Promise<PublishKey | false> => {
+      getPublishKey: async (): Promise<PublishKey | false> => {
         return false;
       },
     });
@@ -59,7 +60,7 @@ describe('writePackage', () => {
   it('responds with 400 if packument has no repository field', async () => {
     // Fake that there's a releaseAs2FA key in datastore:
     writePackage.datastore = Object.assign({}, datastore, {
-      getPublishKey: async (_username: string): Promise<PublishKey | false> => {
+      getPublishKey: async (): Promise<PublishKey | false> => {
         return {
           username: 'bcoe',
           created: 1578630249529,
@@ -67,7 +68,7 @@ describe('writePackage', () => {
           releaseAs2FA: true,
         };
       },
-      getUser: async (_username: string): Promise<false | User> => {
+      getUser: async (): Promise<false | User> => {
         return {name: 'bcoe', token: 'deadbeef'};
       },
     });
@@ -95,9 +96,7 @@ describe('writePackage', () => {
     it('appropriately routes initial package publication', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (
-          _username: string
-        ): Promise<PublishKey | false> => {
+        getPublishKey: async (): Promise<PublishKey | false> => {
           return {
             username: 'bcoe',
             created: 1578630249529,
@@ -105,7 +104,7 @@ describe('writePackage', () => {
             releaseAs2FA: true,
           };
         },
-        getUser: async (_username: string): Promise<false | User> => {
+        getUser: async (): Promise<false | User> => {
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
@@ -138,7 +137,7 @@ describe('writePackage', () => {
         .get('/repos/foo/bar')
         .reply(200, {permissions: {push: true}})
         // most recent release tag on GitHub is v1.0.0
-        .get('/repos/foo/bar/tags?per_page=100')
+        .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.0'}]);
 
       const ret = await writePackage('@soldair/foo', req, res);
@@ -151,9 +150,7 @@ describe('writePackage', () => {
     it('allows a package to be updated', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (
-          _username: string
-        ): Promise<PublishKey | false> => {
+        getPublishKey: async (): Promise<PublishKey | false> => {
           return {
             username: 'bcoe',
             created: 1578630249529,
@@ -161,7 +158,7 @@ describe('writePackage', () => {
             releaseAs2FA: true,
           };
         },
-        getUser: async (_username: string): Promise<false | User> => {
+        getUser: async (): Promise<false | User> => {
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
@@ -197,7 +194,7 @@ describe('writePackage', () => {
         .get('/repos/foo/bar')
         .reply(200, {permissions: {push: true}})
         // most recent release tag on GitHub is v1.0.0
-        .get('/repos/foo/bar/tags?per_page=100')
+        .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.0'}]);
 
       const ret = await writePackage('@soldair/foo', req, res);
@@ -210,9 +207,7 @@ describe('writePackage', () => {
     it('supports publication to next tag', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (
-          _username: string
-        ): Promise<PublishKey | false> => {
+        getPublishKey: async (): Promise<PublishKey | false> => {
           return {
             username: 'bcoe',
             created: 1578630249529,
@@ -220,7 +215,7 @@ describe('writePackage', () => {
             releaseAs2FA: true,
           };
         },
-        getUser: async (_username: string): Promise<false | User> => {
+        getUser: async (): Promise<false | User> => {
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
@@ -256,7 +251,7 @@ describe('writePackage', () => {
         .get('/repos/foo/bar')
         .reply(200, {permissions: {push: true}})
         // most recent release tag on GitHub is v1.0.0
-        .get('/repos/foo/bar/tags?per_page=100')
+        .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.0'}]);
 
       const ret = await writePackage('@soldair/foo', req, res);
@@ -269,9 +264,7 @@ describe('writePackage', () => {
     it("does not allow PUTs that aren't publications, e.g., dist-tag updates", async () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (
-          _username: string
-        ): Promise<PublishKey | false> => {
+        getPublishKey: async (): Promise<PublishKey | false> => {
           return {
             username: 'bcoe',
             created: 1578630249529,
@@ -279,7 +272,7 @@ describe('writePackage', () => {
             releaseAs2FA: true,
           };
         },
-        getUser: async (_username: string): Promise<false | User> => {
+        getUser: async (): Promise<false | User> => {
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
@@ -325,9 +318,7 @@ describe('writePackage', () => {
     it('rejects publication if no corresponding release found on GitHub', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (
-          _username: string
-        ): Promise<PublishKey | false> => {
+        getPublishKey: async (): Promise<PublishKey | false> => {
           return {
             username: 'bcoe',
             created: 1578630249529,
@@ -335,7 +326,7 @@ describe('writePackage', () => {
             releaseAs2FA: true,
           };
         },
-        getUser: async (_username: string): Promise<false | User> => {
+        getUser: async (): Promise<false | User> => {
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
@@ -371,7 +362,7 @@ describe('writePackage', () => {
         .get('/repos/foo/bar')
         .reply(200, {permissions: {push: true}})
         // most recent release tag on GitHub is v0.1.0
-        .get('/repos/foo/bar/tags?per_page=100')
+        .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: 'v0.1.0'}]);
 
       const ret = await writePackage('@soldair/foo', req, res);
@@ -384,9 +375,7 @@ describe('writePackage', () => {
     it('rejects publication if listing tags rerturns non-200', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (
-          _username: string
-        ): Promise<PublishKey | false> => {
+        getPublishKey: async (): Promise<PublishKey | false> => {
           return {
             username: 'bcoe',
             created: 1578630249529,
@@ -394,7 +383,7 @@ describe('writePackage', () => {
             releaseAs2FA: true,
           };
         },
-        getUser: async (_username: string): Promise<false | User> => {
+        getUser: async (): Promise<false | User> => {
           return {name: 'bcoe', token: 'deadbeef'};
         },
       });
@@ -430,7 +419,7 @@ describe('writePackage', () => {
         .get('/repos/foo/bar')
         .reply(200, {permissions: {push: true}})
         // most recent release tag on GitHub is v0.1.0
-        .get('/repos/foo/bar/tags?per_page=100')
+        .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(500);
 
       const ret = await writePackage('@soldair/foo', req, res);
@@ -438,6 +427,64 @@ describe('writePackage', () => {
       githubRequest.done();
       expect(ret.error).to.match(/matching release v1.0.0 not found/);
       expect(ret.statusCode).to.equal(400);
+    });
+
+    it('allows package with monorepo token to be updated', async () => {
+      // Fake that there's a releaseAs2FA key in datastore:
+      writePackage.datastore = Object.assign({}, datastore, {
+        getPublishKey: async (): Promise<PublishKey | false> => {
+          return {
+            username: 'bcoe',
+            created: 1578630249529,
+            value: 'deadbeef',
+            releaseAs2FA: true,
+            monorepo: true,
+          };
+        },
+        getUser: async (): Promise<false | User> => {
+          return {name: 'bcoe', token: 'deadbeef'};
+        },
+      });
+      writePackage.pipeToNpm = (
+        req: Request,
+        res: Response,
+        drainedBody: false | Buffer,
+        newPackage: boolean
+      ): Promise<WriteResponse> => {
+        return Promise.resolve({statusCode: 200, newPackage});
+      };
+
+      // Simulate a publication request to the proxy:
+      const req = writePackageRequest(
+        {authorization: 'token: abc123'},
+        createPackument('@soldair/foo')
+          .addVersion('1.0.0', 'https://github.com/foo/bar')
+          .packument()
+      );
+      const res = mockResponse();
+
+      const npmRequest = nock('https://registry.npmjs.org')
+        .get('/@soldair%2ffoo')
+        .reply(
+          200,
+          createPackument('@soldair/foo')
+            .addVersion('0.1.0', 'https://github.com/foo/bar')
+            .packument()
+        );
+
+      const githubRequest = nock('https://api.github.com')
+        // user has push access to repo in package.json
+        .get('/repos/foo/bar')
+        .reply(200, {permissions: {push: true}})
+        // most recent release tag on GitHub is v1.0.0
+        .get('/repos/foo/bar/tags?per_page=100&page=1')
+        .reply(200, [{name: 'foo-v1.0.0'}]);
+
+      const ret = await writePackage('@soldair/foo', req, res);
+      npmRequest.done();
+      githubRequest.done();
+      expect(ret.statusCode).to.equal(200);
+      expect(ret.newPackage).to.equal(false);
     });
   });
 });

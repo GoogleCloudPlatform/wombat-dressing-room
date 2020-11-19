@@ -25,7 +25,7 @@ describe('github', () => {
   describe('getLatestRelease', () => {
     it('returns latest release from GitHub', async () => {
       const request = nock('https://api.github.com')
-        .get('/repos/bcoe/test/tags?per_page=100')
+        .get('/repos/bcoe/test/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.2'}]);
 
       const latest = await github.getRelease('bcoe/test', 'abc123', 'v1.0.2');
@@ -35,7 +35,7 @@ describe('github', () => {
 
     it('bubbles error appropriately', async () => {
       const request = nock('https://api.github.com')
-        .get('/repos/bcoe/test/tags?per_page=100')
+        .get('/repos/bcoe/test/tags?per_page=100&page=1')
         .reply(404);
       let err: Error | undefined = undefined;
       try {
@@ -47,6 +47,48 @@ describe('github', () => {
       if (err) {
         expect(err.message).to.include('unexpected http code');
       }
+      request.done();
+    });
+
+    it('does not return latest release without prefix, when prefix used', async () => {
+      const request = nock('https://api.github.com')
+        .get('/repos/bcoe/test/tags?per_page=100&page=1')
+        .reply(200, [{name: 'v1.0.2'}])
+        .get('/repos/bcoe/test/tags?per_page=100&page=2')
+        .reply(200, [{name: 'v1.0.3'}])
+        .get('/repos/bcoe/test/tags?per_page=100&page=3')
+        .reply(200, [{name: 'v1.0.4'}])
+        .get('/repos/bcoe/test/tags?per_page=100&page=4')
+        .reply(200, [{name: 'v1.0.5'}])
+        .get('/repos/bcoe/test/tags?per_page=100&page=5')
+        .reply(200, [{name: 'v1.0.6'}]);
+
+      let err: Error;
+      try {
+        await github.getRelease('bcoe/test', 'abc123', 'v1.0.2', 'foo');
+      } catch (_err) {
+        err = _err;
+      }
+      expect(err!.message).to.equal('not found');
+      request.done();
+    });
+
+    it('returns latest release matching prefix', async () => {
+      const request = nock('https://api.github.com')
+        .get('/repos/bcoe/test/tags?per_page=100&page=1')
+        .reply(200, [{name: 'v1.0.3'}])
+        .get('/repos/bcoe/test/tags?per_page=100&page=2')
+        .reply(200, [{name: 'v1.0.4'}])
+        .get('/repos/bcoe/test/tags?per_page=100&page=3')
+        .reply(200, [{name: 'foo-v1.0.2'}]);
+
+      const latest = await github.getRelease(
+        'bcoe/test',
+        'abc123',
+        'v1.0.2',
+        'foo'
+      );
+      expect(latest).to.equal('v1.0.2');
       request.done();
     });
   });

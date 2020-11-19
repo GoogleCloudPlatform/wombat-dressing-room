@@ -371,7 +371,8 @@ app.get(
           handoff.value,
           req.query.package ? (req.query.package + '').trim() : undefined,
           ttl,
-          releaseAs2FA
+          releaseAs2FA,
+          req.query.monorepo === 'on' ? true : false
         ),
         datastore.completeHandoffKey(req.query.ott + ''),
       ]);

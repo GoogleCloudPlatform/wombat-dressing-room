@@ -171,7 +171,8 @@ export const writePackage = async (
         repo.name,
         user.token,
         newPackage ? undefined : doc,
-        drainedBody
+        drainedBody,
+        pubKey.monorepo
       );
     } catch (e) {
       return respondWithError(res, e.statusMessage, e.statusCode);
@@ -231,7 +232,8 @@ async function enforceMatchingRelease(
   repoName: string,
   token: string,
   lastPackument: Packument | undefined,
-  drainedBody: Buffer
+  drainedBody: Buffer,
+  monorepo?: boolean
 ) {
   try {
     const maybePackument = JSON.parse(drainedBody + '');
@@ -278,7 +280,12 @@ async function enforceMatchingRelease(
       }
     }
     try {
-      await github.getRelease(repoName, token, `v${newVersion}`);
+      let prefix;
+      if (monorepo) {
+        const splitName = newPackument.name.split('/');
+        prefix = splitName.length === 1 ? splitName[0] : splitName[1];
+      }
+      await github.getRelease(repoName, token, `v${newVersion}`, prefix);
     } catch (err) {
       const msg = `matching release v${newVersion} not found for ${repoName}`;
       throw new WombatServerError(msg, 400);
