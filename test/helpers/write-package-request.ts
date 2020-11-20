@@ -19,10 +19,12 @@ import {Request} from 'express';
 
 export function writePackageRequest(
   headers: {[key: string]: string},
-  packument?: Packument | string
+  packument?: Packument | string,
+  packageName?: string
 ): Request {
-  return {
+  return ({
     headers,
+    params: {package: packageName},
     on: (event: 'data' | 'end', listener: (buffer?: Buffer) => void) => {
       switch (event) {
         case 'data':
@@ -35,5 +37,6 @@ export function writePackageRequest(
           break;
       }
     },
-  } as Request;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any) as Request;
 }

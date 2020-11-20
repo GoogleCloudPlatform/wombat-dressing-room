@@ -35,6 +35,9 @@ import * as unsafe from './lib/unsafe';
 
 import {publish} from './routes/publish';
 import {putDeleteTag} from './routes/put-delete-tag';
+import {putDeleteVersion} from './routes/put-delete-version';
+
+import {WriteResponse} from './lib/write-package';
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
 
@@ -582,7 +585,7 @@ app.put('/_/api/v1/token', async (req, res) => {
 type Handler = (
   req: express.Request,
   res: express.Response
-) => Promise<void> | void;
+) => Promise<void | WriteResponse> | void;
 
 function wrap(a: Handler) {
   return (req: express.Request, res: express.Response) => {
@@ -625,6 +628,8 @@ function avoidCSRF(req: express.Request, res: express.Response) {
 app.put(/^\/[^/]+$/, wrap(publish));
 app.put('/-/package/:package/dist-tags/:tag', wrap(putDeleteTag));
 app.delete('/-/package/:package/dist-tags/:tag', wrap(putDeleteTag));
+app.put('/:package/-rev/:sha', wrap(putDeleteVersion));
+app.delete('/:package/-/:tarball/-rev/:sha', wrap(putDeleteVersion));
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
