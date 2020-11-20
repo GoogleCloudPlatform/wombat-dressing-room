@@ -63,13 +63,9 @@ describe('github', () => {
         .get('/repos/bcoe/test/tags?per_page=100&page=5')
         .reply(200, [{name: 'v1.0.6'}]);
 
-      let err: Error;
-      try {
-        await github.getRelease('bcoe/test', 'abc123', 'v1.0.2', 'foo');
-      } catch (_err) {
-        err = _err;
-      }
-      expect(err!.message).to.equal('not found');
+      expect(
+        await github.getRelease('bcoe/test', 'abc123', 'v1.0.2', 'foo')
+      ).to.equal(undefined);
       request.done();
     });
 

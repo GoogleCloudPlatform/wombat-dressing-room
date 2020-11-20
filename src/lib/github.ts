@@ -68,7 +68,7 @@ export const getRelease = async (
   token: string,
   tag: string,
   prefix?: string
-): Promise<string> => {
+): Promise<string | undefined> => {
   const client = gh.client(token, clientOptions);
   // We check up to 600 of the most recent tags for a matching release,
   // we use a large page size to allow for monorepos with 100s of tags:
@@ -80,9 +80,13 @@ export const getRelease = async (
         {per_page: 100, page: page},
         (err: Error, code: number, resp: [{name: string}]) => {
           if (err) {
-            return reject(err);
+            return reject(Error(`getRelease: tag = ${tag}`));
           } else if (code !== 200) {
-            return reject(new Error(`unexpected http code = ${code}`));
+            return reject(
+              new Error(
+                `getRelease: unexpected http code = ${code} tag = ${tag}`
+              )
+            );
           } else {
             resolve(resp);
           }
@@ -97,7 +101,7 @@ export const getRelease = async (
       }
     }
   }
-  throw new Error('not found');
+  return undefined;
 };
 
 /**

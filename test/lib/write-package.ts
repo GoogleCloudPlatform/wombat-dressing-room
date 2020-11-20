@@ -42,6 +42,7 @@ function mockResponse() {
 // TODO: rather than silencing info level logging, let's consider moving to
 // a logger like winston or bunyan, which is easier to turn off in tests.
 console.info = () => {};
+console.error = () => {};
 
 describe('writePackage', () => {
   it('responds with 401 if publication key not found in datastore', async () => {
@@ -363,6 +364,14 @@ describe('writePackage', () => {
         .reply(200, {permissions: {push: true}})
         // most recent release tag on GitHub is v0.1.0
         .get('/repos/foo/bar/tags?per_page=100&page=1')
+        .reply(200, [{name: 'v0.1.0'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=2')
+        .reply(200, [{name: 'v0.1.0'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=3')
+        .reply(200, [{name: 'v0.1.0'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=4')
+        .reply(200, [{name: 'v0.1.0'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=5')
         .reply(200, [{name: 'v0.1.0'}]);
 
       const ret = await writePackage('@soldair/foo', req, res);
@@ -425,8 +434,8 @@ describe('writePackage', () => {
       const ret = await writePackage('@soldair/foo', req, res);
       npmRequest.done();
       githubRequest.done();
-      expect(ret.error).to.match(/matching release v1.0.0 not found/);
-      expect(ret.statusCode).to.equal(400);
+      expect(ret.error).to.match(/unknown error/);
+      expect(ret.statusCode).to.equal(500);
     });
 
     it('allows package with monorepo token to be updated', async () => {
