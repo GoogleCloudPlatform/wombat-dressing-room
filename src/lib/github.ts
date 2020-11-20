@@ -55,38 +55,53 @@ export const getRepo = (name: string, token: string): Promise<GhRepo> => {
 /**
  * https://developer.github.com/v3/repos/releases/#list-releases-for-a-repository
  * @param name repository name including username. ex: node/node or bcoe/yargs
+ * @param prefix if present, it is required that the release tags include the
+ *  prefix, e.g., yargs-v1.0.0. This allows a token to be created that works
+ *  for a monorepo.
  * @param token
  * @param tag release tag to fetch.
  *
  * @returns string[] tag names of releases.
  */
-export const getRelease = (
+export const getRelease = async (
   name: string,
   token: string,
-  tag: string
-): Promise<string> => {
+  tag: string,
+  prefix?: string
+): Promise<string | undefined> => {
   const client = gh.client(token, clientOptions);
-  return new Promise((resolve, reject) => {
-    client.get(
-      `/repos/${name}/tags`,
-      {per_page: 100},
-      (err: Error, code: number, resp: [{name: string}]) => {
-        if (err) {
-          return reject(err);
-        } else if (code !== 200)
-          return reject(new Error(`unexpected http code = ${code}`));
-        else if (
-          !resp.find(item => {
-            return item.name === tag;
-          })
-        ) {
-          return reject(new Error('not found'));
-        } else {
-          return resolve(tag);
+  // We check up to 600 of the most recent tags for a matching release,
+  // we use a large page size to allow for monorepos with 100s of tags:
+  const maxPagination = 6;
+  for (let page = 1; page < maxPagination; page++) {
+    const tags: [{name: string}] = await new Promise((resolve, reject) => {
+      client.get(
+        `/repos/${name}/tags`,
+        {per_page: 100, page: page},
+        (err: Error, code: number, resp: [{name: string}]) => {
+          if (err) {
+            return reject(Error(`getRelease: tag = ${tag}`));
+          } else if (code !== 200) {
+            return reject(
+              new Error(
+                `getRelease: unexpected http code = ${code} tag = ${tag}`
+              )
+            );
+          } else {
+            resolve(resp);
+          }
         }
+      );
+    });
+    for (const item of tags) {
+      if (!prefix && item.name === tag) {
+        return tag;
+      } else if (item.name === `${prefix}-${tag}`) {
+        return tag;
       }
-    );
-  });
+    }
+  }
+  return undefined;
 };
 
 /**

@@ -115,7 +115,8 @@ export const savePublishKey = async (
   publishKey: string,
   packageName?: string,
   expiration?: number,
-  releaseAs2FA?: boolean
+  releaseAs2FA?: boolean,
+  monorepo?: boolean
 ): Promise<{}> => {
   if (!config.loginEnabled) {
     return Promise.reject(new Error('disabled on this server.'));
@@ -135,6 +136,7 @@ export const savePublishKey = async (
       package: packageName,
       expiration,
       releaseAs2FA,
+      monorepo,
     },
   });
 };
@@ -242,6 +244,7 @@ export interface PublishKey {
   package?: string;
   expiration?: number;
   releaseAs2FA?: boolean;
+  monorepo?: boolean;
 }
 
 interface UserMain {

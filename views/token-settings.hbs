@@ -26,6 +26,12 @@
     <form id="release-token" action="/_/token">
       <input type="hidden" value="release" name="type" />
       <input class="ott" type="hidden" name="ott" value="" />
+      <br />
+      <label for="monorepo">
+        Is this token for a monorepo?
+      </label>
+      <input type="checkbox" name="monorepo" id="monorepo-input" />
+      </br>
       <button>Create release-backed publication token</button>
     </form>
   </div>
