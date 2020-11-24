@@ -39,11 +39,6 @@ function mockResponse() {
   } as Response;
 }
 
-// TODO: rather than silencing info level logging, let's consider moving to
-// a logger like winston or bunyan, which is easier to turn off in tests.
-console.info = () => {};
-console.error = () => {};
-
 describe('writePackage', () => {
   it('responds with 401 if publication key not found in datastore', async () => {
     writePackage.datastore = Object.assign({}, datastore, {
