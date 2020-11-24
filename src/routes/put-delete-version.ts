@@ -33,7 +33,7 @@ export const putDeleteVersion = async (
   if (result.error) {
     console.error('unpublish error ', req.url, result);
   } else {
-    console.info('');
+    console.info(`auth unpublish for ${req.params.package}`);
   }
   return result;
 };
