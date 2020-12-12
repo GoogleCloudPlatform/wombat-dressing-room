@@ -37,7 +37,7 @@ _Wombat Dressing Room_ requires:
 
 #### Create an npm account
 
-You will need to create an npm account, which will be used or publication.
+You will need to create an npm account, which will be used for publication.
 This account should be configured such that 2FA is enabled for `authentication`
 and `publication`. When you are given a QR code to scan for your authenticator
 app, use a QR code reader to fetch and store the secret associated with the
