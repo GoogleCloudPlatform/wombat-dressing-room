@@ -367,6 +367,18 @@ describe('writePackage', () => {
         .get('/repos/foo/bar/tags?per_page=100&page=4')
         .reply(200, [{name: 'v0.1.0'}])
         .get('/repos/foo/bar/tags?per_page=100&page=5')
+        .reply(200, [{name: 'v0.1.0'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=6')
+        .reply(200, [{name: 'v0.1.0'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=7')
+        .reply(200, [{name: 'v0.1.0'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=8')
+        .reply(200, [{name: 'v0.1.0'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=9')
+        .reply(200, [{name: 'v0.1.0'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=10')
+        .reply(200, [{name: 'v0.1.0'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=11')
         .reply(200, [{name: 'v0.1.0'}]);
 
       const ret = await writePackage('@soldair/foo', req, res);
