@@ -70,9 +70,9 @@ export const getRelease = async (
   prefix?: string
 ): Promise<string | undefined> => {
   const client = gh.client(token, clientOptions);
-  // We check up to 600 of the most recent tags for a matching release,
+  // We check up to 1200 of the most recent tags for a matching release,
   // we use a large page size to allow for monorepos with 100s of tags:
-  const maxPagination = 6;
+  const maxPagination = 12;
   for (let page = 1; page < maxPagination; page++) {
     const tags: [{name: string}] = await new Promise((resolve, reject) => {
       client.get(
