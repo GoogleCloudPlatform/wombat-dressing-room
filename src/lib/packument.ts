@@ -71,7 +71,6 @@ export const repoToGithub = (
         //'xxxx/xxxx' username/repo specifier
         const matches = repo.url.match(/^([^/]+\/[^/]+)(.+)?$/);
         // grabs the first 2 / delimited chunks.
-        console.log;
         const cleaned = matches ? matches[1] : null;
         if (cleaned) {
           return {url: 'https://github.com/' + cleaned, name: cleaned};
