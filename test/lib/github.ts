@@ -61,7 +61,19 @@ describe('github', () => {
         .get('/repos/bcoe/test/tags?per_page=100&page=4')
         .reply(200, [{name: 'v1.0.5'}])
         .get('/repos/bcoe/test/tags?per_page=100&page=5')
-        .reply(200, [{name: 'v1.0.6'}]);
+        .reply(200, [{name: 'v1.0.6'}])
+        .get('/repos/bcoe/test/tags?per_page=100&page=6')
+        .reply(200, [{name: 'v1.0.7'}])
+        .get('/repos/bcoe/test/tags?per_page=100&page=7')
+        .reply(200, [{name: 'v1.0.8'}])
+        .get('/repos/bcoe/test/tags?per_page=100&page=8')
+        .reply(200, [{name: 'v1.0.9'}])
+        .get('/repos/bcoe/test/tags?per_page=100&page=9')
+        .reply(200, [{name: 'v1.0.10'}])
+        .get('/repos/bcoe/test/tags?per_page=100&page=10')
+        .reply(200, [{name: 'v1.0.10'}])
+        .get('/repos/bcoe/test/tags?per_page=100&page=11')
+        .reply(200, [{name: 'v1.0.10'}]);
 
       expect(
         await github.getRelease('bcoe/test', 'abc123', 'v1.0.2', 'foo')
