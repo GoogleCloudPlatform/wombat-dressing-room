@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented here.
 
+## [1.1.0](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v1.0.1...v1.1.0) (2021-02-24)
+
+
+### Features
+
+* adding support for using permsRepo ([#76](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/76)) ([782665e](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/782665ec88ca706e6032ef85c9dee64e6543d23e))
+* allow a candidate release to be published to next tag ([#66](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/66)) ([833dad5](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/833dad53cb9936d342231ef5da2e442786586be5))
+* allow package version to be unpublished ([#87](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/87)) ([1d88788](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/1d88788984e2f157c56822cb2261710ca4949454))
+* support monorepos with release-backed tokens ([#86](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/86)) ([ddb5421](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/ddb54214581137d299b61fd942185cb4aab8cecc))
+
+
+### Bug Fixes
+
+* allow for permsRepo without repository ([#79](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/79)) ([f552d02](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/f552d020a6fc7af1b9a20828c447f05c3a151c3a))
+* check up to 12 pages of tags ([#92](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/92)) ([4565a0c](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/4565a0c7cfe126a6581cb852eded0d4a87eacef8))
+* **deps:** update dependency @google-cloud/datastore to v6 ([#72](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/72)) ([6acd781](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/6acd78194028034a6a94da56ed5ee50e288308d7))
+* **deps:** update dependency express-handlebars to v4 ([#61](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/61)) ([9a84725](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/9a84725b06b91150773c2ababab92f775cf2cbd1))
+* **deps:** update dependency express-handlebars to v5 ([#75](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/75)) ([47de140](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/47de140381c7e80f7566c5bfffb74244c7e30f0b))
+* **deps:** update dependency octonode to ^0.10.0 ([#88](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/88)) ([49081bf](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/49081bf252dfa02c68d7174fb4aad2a52b9773ae))
+* **deps:** update dependency uuid to v7 ([#57](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/57)) ([5a6ff4e](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/5a6ff4e0c516fd13a545e56890f0d2a341a46c67))
+* **deps:** update dependency uuid to v8 ([#69](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/69)) ([a6271c1](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/a6271c165b076348b48493a938b2684c8dbfd07b))
+* fixes bug with repo url handling ([#97](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/97)) ([93638a0](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/93638a0feec55817de6726894301bb7b0a9790d3))
+* login was broken due to missing JS import ([#51](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/51)) ([571e124](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/571e12419e926814bba262abfb5c94770147d933))
+* **release-backed:** look at tags rather than releases ([#84](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/84)) ([9ebafd1](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/9ebafd10dc69c51eb313ceac9389b3849b4089f2))
+
 ### [1.0.1](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v1.0.0...v1.0.1) (2020-01-15)
 
 
