@@ -66,9 +66,16 @@ export const repoToGithub = (
       if (url && url.indexOf('https://github.com') === 0) {
         return {url, name: new URL(url).pathname.substr(1)};
       }
-      if (!url && repo.url.match(/^[^/]+\/[^/]+$/)) {
+
+      if (!url && /^[^/]+\/[^/]+/.test(repo.url)) {
         //'xxxx/xxxx' username/repo specifier
-        return {url: 'https://github.com/' + repo.url, name: repo.url};
+        const matches = repo.url.match(/^([^/]+\/[^/]+)(.+)?$/);
+        // grabs the first 2 / delimited chunks.
+	console.log
+        const cleaned = matches ? matches[1] : null;
+        if (cleaned) {
+          return {url: 'https://github.com/' + cleaned, name: cleaned};
+        }
       }
     }
   }
