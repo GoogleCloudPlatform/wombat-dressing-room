@@ -14,12 +14,12 @@ describe('repoToGithub', () => {
     const match = repoToGithub({
       type: 'git',
       url: 'GoogleCloudPlatform/cloud-for-marketing',
-    })
+    });
 
     const expected = {
       url: 'https://github.com/GoogleCloudPlatform/cloud-for-marketing',
-      name: 'GoogleCloudPlatform/cloud-for-marketing'
-    }
+      name: 'GoogleCloudPlatform/cloud-for-marketing',
+    };
 
     expect(result).to.eql(expected);
     expect(match).to.eql(expected);
