@@ -105,7 +105,7 @@ REGISTRY_URL=hhttp://127.0.0.1:8080
 ### Deploy the application
 
 To configure the Google App Engine services used by _Wombat Dressing Room_,
-perorm an initial deployment:
+perform an initial deployment:
 
 1. install the [gcloud command line tool](https://cloud.google.com/sdk/gcloud/),
    and run `gcloud auth login`.
