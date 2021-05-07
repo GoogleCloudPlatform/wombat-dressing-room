@@ -85,9 +85,10 @@ export const writePackage = async (
   let doc = await packument(packageName);
 
   let latest = undefined;
+
   let newPackage = false;
   let drainedBody: false | Buffer = false;
-  if (!doc) {
+  if (!doc || doc?.time?.unpublished) {
     // this is a completely new package.
     newPackage = true;
     drainedBody = await drainRequest(req);
