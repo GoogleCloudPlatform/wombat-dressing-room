@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented here.
 
+## [1.2.0](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v1.1.0...v1.2.0) (2021-06-09)
+
+
+### Features
+
+* treating unpublished dpackages as if they were new ([#104](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/104)) ([b033dda](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/b033ddac2c5f3bb06d55187e38e6ffe0ef8700ed))
+
+
+### Bug Fixes
+
+* **deps:** update dependency dotenv to v10 ([#110](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/110)) ([b668ff8](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/b668ff813eb6d67e451ee30ac23e225218c742a8))
+
 ## [1.1.0](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v1.0.1...v1.1.0) (2021-02-24)
 
 
