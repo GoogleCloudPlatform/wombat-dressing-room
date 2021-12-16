@@ -7,8 +7,7 @@ describe('repoToGithub', () => {
   it('handles github url shorthand with extra path segments', () => {
     const result = repoToGithub({
       type: 'git',
-      url:
-        'GoogleCloudPlatform/cloud-for-marketing/tree/master/marketing-analytics/activation/common-libs/nodejs-common',
+      url: 'GoogleCloudPlatform/cloud-for-marketing/tree/master/marketing-analytics/activation/common-libs/nodejs-common',
     });
 
     const match = repoToGithub({
