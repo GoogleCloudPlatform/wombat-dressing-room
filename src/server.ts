@@ -629,6 +629,7 @@ app.put(/^\/[^/]+$/, wrap(publish));
 app.put('/-/package/:package/dist-tags/:tag', wrap(putDeleteTag));
 app.delete('/-/package/:package/dist-tags/:tag', wrap(putDeleteTag));
 app.put('/:package/-rev/:sha', wrap(putDeleteVersion));
+app.delete('/:package/-rev/:tag', wrap(putDeleteVersion));
 app.delete('/:package/-/:tarball/-rev/:sha', wrap(putDeleteVersion));
 
 const port = process.env.PORT || 8080;
