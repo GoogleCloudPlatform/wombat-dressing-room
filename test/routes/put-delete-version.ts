@@ -47,11 +47,11 @@ describe('putDeleteVersion', () => {
         return false;
       },
     });
-    const req = ({
+    const req = {
       headers: {authorization: 'token: abc123'},
       params: {package: '@soldair/foo'},
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any) as Request;
+    } as any as Request;
     const res = mockResponse();
     const result = await putDeleteVersion(req, res);
     expect(result?.statusCode).to.equal(401);

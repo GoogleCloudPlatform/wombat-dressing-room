@@ -57,7 +57,8 @@ app.set('views', path.join(__dirname, '../../views'));
 
 app.use(express.static('public'));
 
-const uuidregex = /[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/gi;
+const uuidregex =
+  /[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/gi;
 morgan.token('cleanurl', (req: express.Request) =>
   req.url.replace(uuidregex, '<token>')
 );
@@ -287,7 +288,7 @@ app.get(
       const token = await github.webAccessToken(
         config.githubId,
         config.githubSecret,
-        (req.query.code as {}) as string
+        req.query.code as {} as string
       );
 
       const query = req.session!.query;

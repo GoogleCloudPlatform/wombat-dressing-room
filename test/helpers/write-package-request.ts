@@ -22,7 +22,7 @@ export function writePackageRequest(
   packument?: Packument | string,
   packageName?: string
 ): Request {
-  return ({
+  return {
     headers,
     params: {package: packageName},
     on: (event: 'data' | 'end', listener: (buffer?: Buffer) => void) => {
@@ -38,5 +38,5 @@ export function writePackageRequest(
       }
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any) as Request;
+  } as any as Request;
 }
