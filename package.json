@@ -13,9 +13,9 @@
   "scripts": {
     "start": "NODE_ENV=--enable-source-maps node packages/server/build/src/server.js",
     "develop": "cp config/local.env ./.env && npm run compile && npm start",
-    "precompile": "rimraf public/static",
+    "precompile": "rimraf public",
     "compile": "npm run compile-frontend && npm run compile-server",
-    "compile-frontend": "cd ./packages/app && npm run build && cp -r build/* ../../public",
+    "compile-frontend": "mkdir -p public && cd ./packages/app && npm run build && cp -R build/* ../../public",
     "compile-server": "cd ./packages/server && npm run compile",
     "test": "npm run test-server && npm run test-app",
     "test-server": "cd ./packages/server && npm run test",

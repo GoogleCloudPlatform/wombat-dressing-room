@@ -82,28 +82,29 @@ function avoidCSRF(req: express.Request, res: express.Response) {
  * Static routes. Each of /, /_/help, /_/login, etc.,
  * serves react app bundle.
  */
+const staticRoot = path.join(__dirname, '../../../../public');
 app.get('/', (req, res) => {
   if (redirectToLoginServer(req, res)) {
     return;
   }
   res.sendFile('index.html', {
-    root: path.join(__dirname, '../../../../public'),
+    root: staticRoot,
   });
 });
-app.use(express.static('public'));
+app.use(express.static(staticRoot));
 app.get('/_/help', (_req, res) => {
   res.sendFile('index.html', {
-    root: path.join(__dirname, '../../../../public'),
+    root: staticRoot,
   });
 });
 app.get('/_/login', (_req, res) => {
   res.sendFile('index.html', {
-    root: path.join(__dirname, '../../../../public'),
+    root: staticRoot,
   });
 });
 app.get('/_/manage', (_req, res) => {
   res.sendFile('index.html', {
-    root: path.join(__dirname, '../../../../public'),
+    root: staticRoot,
   });
 });
 

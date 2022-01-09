@@ -10,6 +10,3 @@ views/partials/changelog.hbs
 .vscode
 config
 coverage
-public/github-markdown.css
-public-back
-/public

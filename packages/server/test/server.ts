@@ -24,6 +24,19 @@ import * as assert from 'assert';
 import * as Config from '../src/lib/config';
 import {Server} from 'http';
 
+interface RequestOpts {
+  url: string;
+}
+
+function requestAsync(opts: RequestOpts): Promise<request.Response> {
+  return new Promise((resolve, reject) => {
+    request({followRedirect: false, ...opts}, (err, resp) => {
+      if (err) return reject(err);
+      return resolve(resp);
+    });
+  });
+}
+
 describe('server', () => {
   let server: Server;
   before(() => {
@@ -49,17 +62,30 @@ describe('server', () => {
         userLoginUrl: 'http://www.example.com',
         loginEnabled: false,
       });
-      const resp: request.Response = await new Promise((resolve, reject) => {
-        request(
-          {followRedirect: false, url: 'http://localhost:8080/'},
-          (err, resp) => {
-            if (err) return reject(err);
-            return resolve(resp);
-          }
-        );
-      });
+      const resp = await requestAsync({url: 'http://localhost:8080/'});
       assert.strictEqual(resp.statusCode, 302);
       assert.strictEqual(resp.headers?.location, 'http://www.example.com/');
+    });
+    it('service index if loginEnabled is true', async () => {
+      sinon.stub(Config, 'config').value({
+        userLoginUrl: 'http://www.example.com',
+        loginEnabled: true,
+      });
+      const resp = await requestAsync({url: 'http://localhost:8080/'});
+      assert.strictEqual(resp.statusCode, 200);
+      assert(resp.body.includes('enable JavaScript'));
+    });
+  });
+  describe('static', () => {
+    it('serves static routes', async () => {
+      let resp = await requestAsync({url: 'http://localhost:8080/_/help'});
+      assert(resp.body.includes('enable JavaScript'));
+      resp = await requestAsync({url: 'http://localhost:8080/_/login'});
+      assert(resp.body.includes('enable JavaScript'));
+      resp = await requestAsync({url: 'http://localhost:8080/_/manage'});
+      assert(resp.body.includes('enable JavaScript'));
+      resp = await requestAsync({url: 'http://localhost:8080/robots.txt'});
+      assert(resp.body.includes('User-agent'));
     });
   });
 });
