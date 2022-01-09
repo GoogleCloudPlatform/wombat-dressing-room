@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented here.
 
+## [2.0.0](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v1.1.0...v2.0.0) (2022-01-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* porting frontend code to using react (#124)
+
+### Features
+
+* support force delete ([#119](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/119)) ([ab52e54](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/ab52e5461e4af4bc9112c1849075dba3983ecef8))
+* treating unpublished dpackages as if they were new ([#104](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/104)) ([b033dda](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/b033ddac2c5f3bb06d55187e38e6ffe0ef8700ed))
+
+
+### Bug Fixes
+
+* **deps:** update dependency dotenv to v10 ([#110](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/110)) ([b668ff8](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/b668ff813eb6d67e451ee30ac23e225218c742a8))
+
+
+### Code Refactoring
+
+* porting frontend code to using react ([#124](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/issues/124)) ([bb8ab0d](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/commit/bb8ab0decf6a0b9ab612d9d8107c9159b3abf0a6))
+
 ## [1.1.0](https://www.github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v1.0.1...v1.1.0) (2021-02-24)
 
 
