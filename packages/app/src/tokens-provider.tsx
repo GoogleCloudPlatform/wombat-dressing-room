@@ -41,7 +41,7 @@ interface CreateOpts {
 };
 
 export function TokensProvider({ children }: { children: React.ReactNode }) {
-  const [tokens, setTokens] =  React.useState<any>([]);
+  const [tokens, setTokens] =  React.useState<Array<TokenType>>([]);
   const account = useAccount();
   const flash = useFlashMessage();
 

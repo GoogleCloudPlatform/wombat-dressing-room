@@ -24,19 +24,19 @@ import uuid = require('uuid');
 import * as validatePackage from 'validate-npm-package-name';
 
 import * as datastore from './lib/datastore';
-import { drainRequest } from './lib/drain-request';
+import {drainRequest} from './lib/drain-request';
 import * as github from './lib/github';
-import { config } from './lib/config';
-import { json } from './lib/json';
-import { require2fa } from './lib/packument';
-import { totpCode } from './lib/totp-code';
+import {config} from './lib/config';
+import {json} from './lib/json';
+import {require2fa} from './lib/packument';
+import {totpCode} from './lib/totp-code';
 import * as unsafe from './lib/unsafe';
 
-import { publish } from './routes/publish';
-import { putDeleteTag } from './routes/put-delete-tag';
-import { putDeleteVersion } from './routes/put-delete-version';
+import {publish} from './routes/publish';
+import {putDeleteTag} from './routes/put-delete-tag';
+import {putDeleteVersion} from './routes/put-delete-version';
 
-import { WriteResponse } from './lib/write-package';
+import {WriteResponse} from './lib/write-package';
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
 const app = express();
@@ -50,7 +50,7 @@ morgan.token('cleanurl', (req: express.Request) =>
 app.use(
   morgan(
     ':remote-addr :remote-user :method :cleanurl HTTP/:http-version :status :res[content-length] - :response-time ms',
-    { stream: process.stdout }
+    {stream: process.stdout}
   )
 );
 
@@ -191,7 +191,7 @@ app.post(
   '/_/2fa',
   wrap(async (req, res) => {
     const packageName = (req.query.packageName as string) || '';
-    let result: { status: number; data: Buffer } | undefined;
+    let result: {status: number; data: Buffer} | undefined;
     try {
       result = await require2fa(
         packageName,
@@ -238,7 +238,7 @@ app.get(
       res.status(202);
       res.end('{}');
     } else if (handoff.complete) {
-      res.end(JSON.stringify({ token: handoff.value }));
+      res.end(JSON.stringify({token: handoff.value}));
     }
   })
 );
@@ -311,7 +311,7 @@ app.get(
       return;
     }
     res.header('Content-type', 'application/json');
-    const { link } = github.webAccessLink(
+    const {link} = github.webAccessLink(
       config.githubId,
       config.githubSecret,
       []
@@ -367,7 +367,7 @@ app.get(
         await datastore.savePublishKey(user.login, query.token);
       }
 
-      req.session!.user = unsafe.ghUserData(user) as { [k: string]: string };
+      req.session!.user = unsafe.ghUserData(user) as {[k: string]: string};
       req.session!.token = token;
       req.session!.flash = JSON.stringify({
         severity: 'success',
@@ -420,7 +420,7 @@ app.put(
       !(body.packageName as string).trim().length
     ) {
       res.statusCode = 400;
-      return res.end({ error: 'package name required' });
+      return res.end({error: 'package name required'});
     }
 
     const handoff = body.ott
@@ -485,15 +485,15 @@ app.get('/_/api/v1/tokens', (req, res) => {
         });
       });
 
-      res.end(JSON.stringify({ error: false, data: cleaned }));
+      res.end(JSON.stringify({error: false, data: cleaned}));
     })
     .catch(e => {
       const code = uuid.v4();
       console.log(
         'error loading user tokens list ' +
-        req.session!.user.login +
-        ' error:\n' +
-        e
+          req.session!.user.login +
+          ' error:\n' +
+          e
       );
       res.end(
         JSON.stringify({
@@ -519,7 +519,7 @@ app.delete('/_/api/v1/token', async (req, res) => {
   const body = json(result);
 
   if (!body) {
-    return res.end(JSON.stringify({ error: 'malformed json request body' }));
+    return res.end(JSON.stringify({error: 'malformed json request body'}));
   }
 
   const prefix = body.prefix || '';
@@ -543,7 +543,7 @@ app.delete('/_/api/v1/token', async (req, res) => {
         error = "couldn't find key";
       }
 
-      res.end(JSON.stringify({ error, data: !!key }));
+      res.end(JSON.stringify({error, data: !!key}));
     })
     .catch(e => {
       const code = uuid.v4();
@@ -575,9 +575,9 @@ function wrap(a: Handler) {
         const id = uuid.v4().replace(/[-]+/g, '');
         console.error(
           'unhandled request handler rejection. ' +
-          id +
-          ' ' +
-          JSON.stringify(e + e.stack)
+            id +
+            ' ' +
+            JSON.stringify(e + e.stack)
         );
         res.status(500);
         res.end('server error ping support with id: ' + id);

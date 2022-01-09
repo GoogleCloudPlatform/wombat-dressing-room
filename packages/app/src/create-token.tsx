@@ -46,13 +46,34 @@ export default function CreateToken() {
     packageName: '',
   })
 
-  function handleChange(evt) {
+  function handleChange(event) {
     const checkboxes = ['monorepo'];
-    const value = checkboxes.includes(evt.target.name) ? evt.target.checked : evt.target.value;
+    const value = checkboxes.includes(event.target.name) ? event.target.checked : event.target.value;
     setState({
       ...state,
-      [evt.target.name]: value
+      [event.target.name]: value
     });
+  }
+
+  async function createTTLToken() {
+    await tokens.create('ttl');
+    window.scrollTo(0, 0)
+  }
+
+  async function createReleaseBackedToken(event) {
+    event.preventDefault();
+    await tokens.create('release', {
+      monorepo: state.monorepo
+    });
+    window.scrollTo(0, 0)
+  }
+
+  async function createPackageToken(event) {
+    event.preventDefault();
+    await tokens.create('package', {
+      packageName: state.packageName
+    });
+    window.scrollTo(0, 0)
   }
 
   return (
@@ -73,10 +94,7 @@ export default function CreateToken() {
                     directly, this is likely the best option.
                   </p>
                   <ButtonGroup variant="contained" aria-label="outlined primary button group">
-                    <Button data-testid="ttl" onClick={async () => {
-                      await tokens.create('ttl');
-                      window.scrollTo(0, 0)
-                    }}>
+                    <Button data-testid="ttl" onClick={createTTLToken}>
                       Create Token
                     </Button>
                   </ButtonGroup>
@@ -91,13 +109,7 @@ export default function CreateToken() {
                   A publication will only be permitted if a corresponding release is
                   found on GitHub.
                 </p>
-                <form onSubmit={async (event) => {
-                  event.preventDefault();
-                  await tokens.create('release', {
-                    monorepo: state.monorepo
-                  });
-                  window.scrollTo(0, 0)
-                }}>
+                <form onSubmit={createReleaseBackedToken}>
                   <FormGroup>
                     <FormControlLabel control={<Checkbox name="monorepo" onChange={handleChange} />} label="Support monorepo style tags" />
                   </FormGroup>
@@ -116,13 +128,7 @@ export default function CreateToken() {
                     Package tokens do not timeout, but can only publish a single package.
                     Use these for build automation, etc.
                   </p>
-                  <form onSubmit={async (event) => {
-                    event.preventDefault();
-                    await tokens.create('package', {
-                      packageName: state.packageName
-                    });
-                    window.scrollTo(0, 0)
-                  }}>
+                  <form onSubmit={createPackageToken}>
                     <FormGroup>
                       <TextField
                         required

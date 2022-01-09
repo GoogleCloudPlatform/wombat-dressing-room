@@ -59,6 +59,12 @@ export default function ManageTokens() {
     getTokens();
   }, [initialLoad, tokens]);
 
+  async function deleteToken(token: TokenType) {
+    setDeleting(true);
+    await tokens.remove(token.prefix, token.created);
+    setDeleting(false);
+  }
+
   return (
     <main>
       <CssBaseline />
@@ -89,10 +95,8 @@ export default function ManageTokens() {
                   <TableCell>{row.expiration ? (new Date(row.expiration)).toISOString() : 'never'}</TableCell>
                   <TableCell>{row.releaseBacked ? 'true' : 'false'}</TableCell>
                   <TableCell>
-                    <Button variant="outlined" startIcon={<DeleteForever />} disabled={deleting} onClick={async () => {
-                      setDeleting(true);
-                      await tokens.remove(row.prefix, row.created);
-                      setDeleting(false);
+                    <Button variant="outlined" startIcon={<DeleteForever />} disabled={deleting} onClick={() => {
+                      deleteToken(row)
                     }}>
                       Delete
                     </Button>
