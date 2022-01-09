@@ -3,7 +3,6 @@
 > Google's npm registry proxy. Designed to reduce the attack surface of npm packages.
 
 [![Build Status](https://github.com/GoogleCloudPlatform/wombat-dressing-room/workflows/ci/badge.svg)](https://github.com/GoogleCloudPlatform/wombat-dressing-room/actions)
-[![Known Vulnerabilities](https://snyk.io/test/github/GoogleCloudPlatform/wombat-dressing-room/badge.svg)](https://snyk.io/test/github/GoogleCloudPlatform/wombat-dressing-room)
 [![Code Style: Google](https://img.shields.io/badge/code%20style-google-blueviolet.svg)](https://github.com/google/gts)
 
 ## What it does
@@ -70,7 +69,7 @@ NPM_OTP_SECRET={the text value of the otp secret}
 NPM_TOKEN={the npm token}
 GITHUB_CLIENT_ID={github app id}
 GITHUB_CLIENT_SECRET={github app secret}
-DATASTORE_PROJECT={project datastore is configured for}
+DATASTORE_PROJECT_ID={project datastore is configured for}
 LOGIN_ENABLED=yes-this-is-a-login-server
 LOGIN_URL=https://project.appspot.com]
 REGISTRY_URL=https://external-project.appspot.com
@@ -83,7 +82,7 @@ NPM_OTP_SECRET={the text value of the otp secret}
 NPM_TOKEN={the npm token}
 GITHUB_CLIENT_ID={github app id}
 GITHUB_CLIENT_SECRET={github app secret}
-DATASTORE_PROJECT={project datastore is configured for}
+DATASTORE_PROJECT_ID={project datastore is configured for}
 LOGIN_ENABLED=this-is-not-enabled
 LOGIN_URL=https://project.appspot.com]
 REGISTRY_URL=https://external-project.appspot.com
@@ -96,7 +95,7 @@ NPM_OTP_SECRET={the text value of the otp secret}
 NPM_TOKEN={the npm token}
 GITHUB_CLIENT_ID={github app id}
 GITHUB_CLIENT_SECRET={github app secret}
-DATASTORE_PROJECT={project datastore is configured for}
+DATASTORE_PROJECT_ID={project datastore is configured for}
 LOGIN_ENABLED=yes-this-is-a-login-server
 LOGIN_URL=http://127.0.0.1:8080
 REGISTRY_URL=hhttp://127.0.0.1:8080

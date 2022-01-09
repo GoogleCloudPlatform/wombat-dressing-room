@@ -1,2 +1,3 @@
-runtime: nodejs10
-service: external
+runtime: nodejs12
+# Optional service name:
+# service: external
