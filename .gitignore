@@ -11,3 +11,5 @@ views/partials/changelog.hbs
 config
 coverage
 public/github-markdown.css
+public-back
+/public
