@@ -282,18 +282,20 @@ async function enforceMatchingRelease(
       }
     }
     let prefix;
+    const tags = [];
     if (monorepo) {
       const splitName = newPackument.name.split('/');
       prefix = splitName.length === 1 ? splitName[0] : splitName[1];
+      // release-please-style monorepo tags: package-v2.0.1
+      tags.push(`${prefix}-v${newVersion}`);
+      // lerna-style monorepo tags: @scope/package@2.0.1
+      tags.push(`${newPackument.name}@${newVersion}`);
+    } else {
+      tags.push(`v${newVersion}`);
     }
-    const release = await github.getRelease(
-      repoName,
-      token,
-      `v${newVersion}`,
-      prefix
-    );
+    const release = await github.getRelease(repoName, token, tags);
     if (!release) {
-      const msg = `matching release v${newVersion} not found for ${repoName}`;
+      const msg = `matching release v${newVersion} not found for ${repoName}. Did not find any tags matching: ${tags.join()}`;
       throw new WombatServerError(msg, 400);
     }
   } catch (_err) {
