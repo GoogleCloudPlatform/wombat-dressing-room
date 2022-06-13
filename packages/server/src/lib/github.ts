@@ -56,14 +56,14 @@ export const getRepo = (name: string, token: string): Promise<GhRepo> => {
  * https://developer.github.com/v3/repos/releases/#list-releases-for-a-repository
  * @param name repository name including username. ex: node/node or bcoe/yargs
  * @param token
- * @param proposedTags list of possible tag names to fetch. The first one to match will be returned.
+ * @param matchingTags list of possible tag names to fetch. The first one to match will be returned.
  *
  * @returns string first given tag that matches a tag on GitHub, or undefined if none match.
  */
 export const getRelease = async (
   name: string,
   token: string,
-  proposedTags: string[]
+  matchingTags: string[]
 ): Promise<string | undefined> => {
   const client = gh.client(token, clientOptions);
   // We check up to 1200 of the most recent tags for a matching release,
@@ -77,12 +77,12 @@ export const getRelease = async (
         (err: Error, code: number, resp: [{name: string}]) => {
           if (err) {
             return reject(
-              Error(`getRelease: proposedTags = ${proposedTags.toString()}`)
+              Error(`getRelease: matchingTags = ${matchingTags.toString()}`)
             );
           } else if (code !== 200) {
             return reject(
               new Error(
-                `getRelease: unexpected http code = ${code} tag = ${proposedTags.toString()}`
+                `getRelease: unexpected http code = ${code} tag = ${matchingTags.toString()}`
               )
             );
           } else {
@@ -92,7 +92,7 @@ export const getRelease = async (
       );
     });
     for (const item of tags) {
-      for (const tag of proposedTags) {
+      for (const tag of matchingTags) {
         if (item.name === tag) {
           return tag;
         }
