@@ -17,11 +17,12 @@
     "**/.jsdoc.js",
     "karma.conf.js",
     "webpack-tests.config.js",
-    "webpack.config.js"
+    "webpack.config.js",
+    ".prettierrc.js"
   ],
   "exclude-after-remap": false,
   "all": true,
-  "lines": 37,
-  "branches": "66",
-  "statements": "37"
+  "lines": 55,
+  "branches": "70",
+  "statements": "55"
 }
