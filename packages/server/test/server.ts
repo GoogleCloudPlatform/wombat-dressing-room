@@ -57,7 +57,7 @@ describe('server', () => {
     });
   });
   describe('/', () => {
-    it('redirects to frontend loginEnabled is false', async () => {
+    it('redirects to frontend when loginEnabled is false', async () => {
       sinon.stub(Config, 'config').value({
         userLoginUrl: 'http://www.example.com',
         loginEnabled: false,
