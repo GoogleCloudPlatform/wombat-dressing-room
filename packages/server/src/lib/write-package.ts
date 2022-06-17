@@ -299,6 +299,7 @@ async function enforceMatchingRelease(
       throw new WombatServerError(msg, 400);
     }
   } catch (_err) {
+    // TODO(#158): This can swallow some errors that do have messages
     const err = _err as {statusMessage: string; statusCode: number};
     if (err.statusCode && err.statusMessage) throw err;
     err.statusCode = 500;
