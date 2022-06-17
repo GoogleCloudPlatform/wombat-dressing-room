@@ -26,7 +26,7 @@ import * as validatePackage from 'validate-npm-package-name';
 import * as datastore from './lib/datastore';
 import {drainRequest} from './lib/drain-request';
 import * as github from './lib/github';
-import {config} from './lib/config';
+import * as Config from './lib/config';
 import {json} from './lib/json';
 import {require2fa} from './lib/packument';
 import {totpCode} from './lib/totp-code';
@@ -82,33 +82,34 @@ function avoidCSRF(req: express.Request, res: express.Response) {
  * Static routes. Each of /, /_/help, /_/login, etc.,
  * serves react app bundle.
  */
+const staticRoot = path.join(__dirname, '../../../../public');
 app.get('/', (req, res) => {
   if (redirectToLoginServer(req, res)) {
     return;
   }
   res.sendFile('index.html', {
-    root: path.join(__dirname, '../../../../public'),
+    root: staticRoot,
   });
 });
-app.use(express.static('public'));
+app.use(express.static(staticRoot));
 app.get('/_/help', (_req, res) => {
   res.sendFile('index.html', {
-    root: path.join(__dirname, '../../../../public'),
+    root: staticRoot,
   });
 });
 app.get('/_/login', (_req, res) => {
   res.sendFile('index.html', {
-    root: path.join(__dirname, '../../../../public'),
+    root: staticRoot,
   });
 });
 app.get('/_/manage', (_req, res) => {
   res.sendFile('index.html', {
-    root: path.join(__dirname, '../../../../public'),
+    root: staticRoot,
   });
 });
 
 /*
- * Middleware to extract npmrc namespace, andj add
+ * Middleware to extract npmrc namespace, and add
  * to request object.
  */
 app.use((req, _res, next) => {
@@ -137,7 +138,7 @@ app.use((req, _res, next) => {
 app.use(
   cookieSession({
     name: 'session',
-    keys: [config.sessionSecret || 'wombats are fun'],
+    keys: [Config.config.sessionSecret || 'wombats are fun'],
     // Prevent CSRF by requiring same site for POSTs.
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite#lax
     sameSite: 'lax',
@@ -149,11 +150,11 @@ app.use(
  * API endpoints against server that does not have frontend enabled.
  */
 const redirectToLoginServer = (req: express.Request, res: express.Response) => {
-  if (!config.loginEnabled) {
+  if (!Config.config.loginEnabled) {
     if (req.query.redir) {
       res.end('login disabled and there is maybe a redirect loop.');
-    } else if (config.userLoginUrl) {
-      res.redirect(config.userLoginUrl + req.url);
+    } else if (Config.config.userLoginUrl) {
+      res.redirect(Config.config.userLoginUrl + req.url);
     } else {
       res.end("these are not the droids you're looking for");
     }
@@ -179,7 +180,7 @@ app.post(
       datastore.generatePublishKey()
     );
     res.end(
-      `{"doneUrl":"${config.userRegistryUrl}/_/done?ott=${token}","loginUrl":"${config.userLoginUrl}?ott=${token}${packageNameHint}"}`
+      `{"doneUrl":"${Config.config.userRegistryUrl}/_/done?ott=${token}","loginUrl":"${Config.config.userLoginUrl}?ott=${token}${packageNameHint}"}`
     );
   })
 );
@@ -195,8 +196,8 @@ app.post(
     try {
       result = await require2fa(
         packageName,
-        config.npmToken,
-        totpCode(config.totpSecret)
+        Config.config.npmToken,
+        totpCode(Config.config.totpSecret)
       );
     } catch (e) {
       return res.end(
@@ -267,7 +268,7 @@ app.get(
     res.header('Content-type', 'application/json');
 
     const account = {
-      registryHref: config.userRegistryUrl || 'http://127.0.0.1:8080',
+      registryHref: Config.config.userRegistryUrl || 'http://127.0.0.1:8080',
       authenticated: false,
     } as {
       flash?: string;
@@ -312,8 +313,8 @@ app.get(
     }
     res.header('Content-type', 'application/json');
     const {link} = github.webAccessLink(
-      config.githubId,
-      config.githubSecret,
+      Config.config.githubId,
+      Config.config.githubSecret,
       []
     );
     res.send({
@@ -337,7 +338,7 @@ app.get(
   '/oauth/github',
   wrap(async (req, res) => {
     // https://github.com/login/oauth/access_token
-    if (!config.loginEnabled) {
+    if (!Config.config.loginEnabled) {
       res.end('service disabled.');
     }
 
@@ -349,8 +350,8 @@ app.get(
 
     try {
       const token = await github.webAccessToken(
-        config.githubId,
-        config.githubSecret,
+        Config.config.githubId,
+        Config.config.githubSecret,
         req.query.code as {} as string
       );
 
@@ -657,6 +658,11 @@ app.delete('/:package/-/:tarball/-rev/:sha', wrap(putDeleteVersion));
 app.put('/:package/-rev/:sha', wrap(putDeleteVersion));
 
 const port = process.env.PORT || 8080;
-app.listen(port, () => {
-  console.log(`listening on ${port}`);
-});
+
+if (module === require.main) {
+  app.listen(port, () => {
+    console.log(`listening on ${port}`);
+  });
+}
+
+export default app;
