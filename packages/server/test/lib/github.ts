@@ -28,7 +28,7 @@ describe('github', () => {
         .get('/repos/bcoe/test/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.2'}]);
 
-      const latest = await github.getRelease('bcoe/test', 'abc123', 'v1.0.2');
+      const latest = await github.getRelease('bcoe/test', 'abc123', ['v1.0.2']);
       expect(latest).to.equal('v1.0.2');
       request.done();
     });
@@ -39,7 +39,7 @@ describe('github', () => {
         .reply(404);
       let err: Error | undefined = undefined;
       try {
-        await github.getRelease('bcoe/test', 'abc123', 'v1.0.2');
+        await github.getRelease('bcoe/test', 'abc123', ['v1.0.2']);
       } catch (_err) {
         err = _err as Error;
       }
@@ -50,7 +50,7 @@ describe('github', () => {
       request.done();
     });
 
-    it('does not return latest release without prefix, when prefix used', async () => {
+    it('does not return latest release without prefix, when monorepo-style used', async () => {
       const request = nock('https://api.github.com')
         .get('/repos/bcoe/test/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.2'}])
@@ -76,12 +76,14 @@ describe('github', () => {
         .reply(200, [{name: 'v1.0.10'}]);
 
       expect(
-        await github.getRelease('bcoe/test', 'abc123', 'v1.0.2', 'foo')
+        await github.getRelease('bcoe/test', 'abc123', [
+          'foo-v1.0.2, @scope/foo@1.0.2',
+        ])
       ).to.equal(undefined);
       request.done();
     });
 
-    it('returns latest release matching prefix', async () => {
+    it('returns latest release matching monorepo style tag', async () => {
       const request = nock('https://api.github.com')
         .get('/repos/bcoe/test/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.3'}])
@@ -90,13 +92,26 @@ describe('github', () => {
         .get('/repos/bcoe/test/tags?per_page=100&page=3')
         .reply(200, [{name: 'foo-v1.0.2'}]);
 
-      const latest = await github.getRelease(
-        'bcoe/test',
-        'abc123',
-        'v1.0.2',
-        'foo'
-      );
-      expect(latest).to.equal('v1.0.2');
+      const latest = await github.getRelease('bcoe/test', 'abc123', [
+        'foo-v1.0.2',
+      ]);
+      expect(latest).to.equal('foo-v1.0.2');
+      request.done();
+    });
+
+    it('returns latest release matching lerna style tag', async () => {
+      const request = nock('https://api.github.com')
+        .get('/repos/bcoe/test/tags?per_page=100&page=1')
+        .reply(200, [{name: 'v1.0.3'}])
+        .get('/repos/bcoe/test/tags?per_page=100&page=2')
+        .reply(200, [{name: 'v1.0.4'}])
+        .get('/repos/bcoe/test/tags?per_page=100&page=3')
+        .reply(200, [{name: '@scope/foo@1.0.2'}]);
+
+      const latest = await github.getRelease('bcoe/test', 'abc123', [
+        '@scope/foo@1.0.2',
+      ]);
+      expect(latest).to.equal('@scope/foo@1.0.2');
       request.done();
     });
   });

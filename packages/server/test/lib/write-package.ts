@@ -502,5 +502,141 @@ describe('writePackage', () => {
       expect(ret.statusCode).to.equal(200);
       expect(ret.newPackage).to.equal(false);
     });
+
+    it('allows package with monorepo token and lerna-style tags to be updated', async () => {
+      // Fake that there's a releaseAs2FA key in datastore:
+      writePackage.datastore = Object.assign({}, datastore, {
+        getPublishKey: async (): Promise<PublishKey | false> => {
+          return {
+            username: 'bcoe',
+            created: 1578630249529,
+            value: 'deadbeef',
+            releaseAs2FA: true,
+            monorepo: true,
+          };
+        },
+        getUser: async (): Promise<false | User> => {
+          return {name: 'bcoe', token: 'deadbeef'};
+        },
+      });
+      writePackage.pipeToNpm = (
+        req: Request,
+        res: Response,
+        drainedBody: false | Buffer,
+        newPackage: boolean
+      ): Promise<WriteResponse> => {
+        return Promise.resolve({statusCode: 200, newPackage});
+      };
+
+      // Simulate a publication request to the proxy:
+      const req = writePackageRequest(
+        {authorization: 'token: abc123'},
+        createPackument('@soldair/foo')
+          .addVersion('1.0.0', 'https://github.com/foo/bar')
+          .packument()
+      );
+      const res = mockResponse();
+
+      const npmRequest = nock('https://registry.npmjs.org')
+        .get('/@soldair%2ffoo')
+        .reply(
+          200,
+          createPackument('@soldair/foo')
+            .addVersion('0.1.0', 'https://github.com/foo/bar')
+            .packument()
+        );
+
+      const githubRequest = nock('https://api.github.com')
+        // user has push access to repo in package.json
+        .get('/repos/foo/bar')
+        .reply(200, {permissions: {push: true}})
+        // most recent release tag on GitHub is v1.0.0
+        .get('/repos/foo/bar/tags?per_page=100&page=1')
+        .reply(200, [{name: '@soldair/foo@1.0.0'}]);
+
+      const ret = await writePackage('@soldair/foo', req, res);
+      npmRequest.done();
+      githubRequest.done();
+      expect(ret.statusCode).to.equal(200);
+      expect(ret.newPackage).to.equal(false);
+    });
+
+    it('does not allow package with monorepo token to be updated if tag does not have prefix', async () => {
+      // Fake that there's a releaseAs2FA key in datastore:
+      writePackage.datastore = Object.assign({}, datastore, {
+        getPublishKey: async (): Promise<PublishKey | false> => {
+          return {
+            username: 'bcoe',
+            created: 1578630249529,
+            value: 'deadbeef',
+            releaseAs2FA: true,
+            monorepo: true,
+          };
+        },
+        getUser: async (): Promise<false | User> => {
+          return {name: 'bcoe', token: 'deadbeef'};
+        },
+      });
+      writePackage.pipeToNpm = (
+        req: Request,
+        res: Response,
+        drainedBody: false | Buffer,
+        newPackage: boolean
+      ): Promise<WriteResponse> => {
+        return Promise.resolve({statusCode: 200, newPackage});
+      };
+
+      // Simulate a publication request to the proxy:
+      const req = writePackageRequest(
+        {authorization: 'token: abc123'},
+        createPackument('@soldair/foo')
+          .addVersion('1.0.0', 'https://github.com/foo/bar')
+          .packument()
+      );
+      const res = mockResponse();
+
+      const npmRequest = nock('https://registry.npmjs.org')
+        .get('/@soldair%2ffoo')
+        .reply(
+          200,
+          createPackument('@soldair/foo')
+            .addVersion('0.1.0', 'https://github.com/foo/bar')
+            .packument()
+        );
+
+      const githubRequest = nock('https://api.github.com')
+        // user has push access to repo in package.json
+        .get('/repos/foo/bar')
+        .reply(200, {permissions: {push: true}})
+        // This is monorepo-style token but the tags on GH are not monorepo-style
+        .get('/repos/foo/bar/tags?per_page=100&page=1')
+        .reply(200, [{name: 'v1.0.0'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=2')
+        .reply(200, [{name: 'v1.0.3'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=3')
+        .reply(200, [{name: 'v1.0.4'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=4')
+        .reply(200, [{name: 'v1.0.5'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=5')
+        .reply(200, [{name: 'v1.0.6'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=6')
+        .reply(200, [{name: 'v1.0.7'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=7')
+        .reply(200, [{name: 'v1.0.8'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=8')
+        .reply(200, [{name: 'v1.0.9'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=9')
+        .reply(200, [{name: 'v1.0.10'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=10')
+        .reply(200, [{name: 'v1.0.10'}])
+        .get('/repos/foo/bar/tags?per_page=100&page=11')
+        .reply(200, [{name: 'v1.0.10'}]);
+
+      const ret = await writePackage('@soldair/foo', req, res);
+      npmRequest.done();
+      githubRequest.done();
+      expect(ret.error).to.match(/matching release v1.0.0 not found/);
+      expect(ret.statusCode).to.equal(400);
+    });
   });
 });

@@ -55,19 +55,15 @@ export const getRepo = (name: string, token: string): Promise<GhRepo> => {
 /**
  * https://developer.github.com/v3/repos/releases/#list-releases-for-a-repository
  * @param name repository name including username. ex: node/node or bcoe/yargs
- * @param prefix if present, it is required that the release tags include the
- *  prefix, e.g., yargs-v1.0.0. This allows a token to be created that works
- *  for a monorepo.
  * @param token
- * @param tag release tag to fetch.
+ * @param matchingTags list of possible tag names to fetch. The first one to match will be returned.
  *
- * @returns string[] tag names of releases.
+ * @returns string first given tag that matches a tag on GitHub, or undefined if none match.
  */
 export const getRelease = async (
   name: string,
   token: string,
-  tag: string,
-  prefix?: string
+  matchingTags: string[]
 ): Promise<string | undefined> => {
   const client = gh.client(token, clientOptions);
   // We check up to 1200 of the most recent tags for a matching release,
@@ -80,11 +76,13 @@ export const getRelease = async (
         {per_page: 100, page: page},
         (err: Error, code: number, resp: [{name: string}]) => {
           if (err) {
-            return reject(Error(`getRelease: tag = ${tag}`));
+            return reject(
+              Error(`getRelease: matchingTags = ${matchingTags.toString()}`)
+            );
           } else if (code !== 200) {
             return reject(
               new Error(
-                `getRelease: unexpected http code = ${code} tag = ${tag}`
+                `getRelease: unexpected http code = ${code} tag = ${matchingTags.toString()}`
               )
             );
           } else {
@@ -94,10 +92,10 @@ export const getRelease = async (
       );
     });
     for (const item of tags) {
-      if (!prefix && item.name === tag) {
-        return tag;
-      } else if (item.name === `${prefix}-${tag}`) {
-        return tag;
+      for (const tag of matchingTags) {
+        if (item.name === tag) {
+          return tag;
+        }
       }
     }
   }
