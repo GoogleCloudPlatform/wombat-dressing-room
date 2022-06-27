@@ -53,21 +53,80 @@ export const getRepo = (name: string, token: string): Promise<GhRepo> => {
 };
 
 /**
- * https://developer.github.com/v3/repos/releases/#list-releases-for-a-repository
+ * Checks if there is a matching release on GitHub for the given tag(s). If there is no release, we'll check the list of tags.
+ * Checking tags is less reliable as a limited number of tags are checked and they are not in chronological order.
+ * @param name repository name including username. ex: node/node or bcoe/yargs
+ * @param token
+ * @param tags list of possible tag names to fetch. The first one to match will be returned.
+ *
+ * @returns string first given tag that matches a tag or release on GitHub, or undefined if none match.
+ */
+export const getRelease = async (
+  name: string,
+  token: string,
+  tags: string[]
+): Promise<string | undefined> => {
+  const matchingRelease = await getReleaseForTags(name, token, tags);
+  if (matchingRelease) {
+    return matchingRelease;
+  }
+  return getMatchingTags(name, token, tags);
+};
+
+/**
+ * Calls GitHub's API to get a release by tag name.
+ * https://docs.github.com/en/rest/releases/releases#get-a-release-by-tag-name
+ * @param name repository name including username. ex: node/node or bcoe/yargs
+ * @param token
+ * @param tags list of possible tag names to fetch. The first one to match will be returned.
+ *
+ * @returns string first given tag that matches a release on GitHub, or undefined if none match.
+ */
+const getReleaseForTags = async (
+  name: string,
+  token: string,
+  tags: string[]
+): Promise<string | undefined> => {
+  const client = gh.client(token, clientOptions);
+  for (const tag of tags) {
+    const release = await new Promise<string | undefined>((resolve, reject) => {
+      client.get(
+        `/repos/${name}/releases/tags/${tag}`,
+        {},
+        (err: Error, code: number, resp: {name: string}) => {
+          if (err) {
+            return reject(
+              Error(`getReleaseForTags: tag = ${tag}, err = ${err}`)
+            );
+          }
+          resolve(resp.name || undefined);
+        }
+      );
+    });
+    if (release) {
+      return release;
+    }
+  }
+  return undefined;
+};
+
+/**
+ * Calls GitHub's API to list tags for a repository.
+ * https://docs.github.com/en/rest/repos/repos#list-repository-tags
  * @param name repository name including username. ex: node/node or bcoe/yargs
  * @param token
  * @param matchingTags list of possible tag names to fetch. The first one to match will be returned.
  *
  * @returns string first given tag that matches a tag on GitHub, or undefined if none match.
  */
-export const getRelease = async (
+const getMatchingTags = async (
   name: string,
   token: string,
   matchingTags: string[]
 ): Promise<string | undefined> => {
   const client = gh.client(token, clientOptions);
-  // We check up to 1200 of the most recent tags for a matching release,
-  // we use a large page size to allow for monorepos with 100s of tags:
+  // We check up to 1100 of the most recent tags for a match,
+  // using a large page size to allow for monorepos with 100s of tags:
   const maxPagination = 12;
   for (let page = 1; page < maxPagination; page++) {
     const tags: [{name: string}] = await new Promise((resolve, reject) => {
@@ -77,7 +136,9 @@ export const getRelease = async (
         (err: Error, code: number, resp: [{name: string}]) => {
           if (err) {
             return reject(
-              Error(`getRelease: matchingTags = ${matchingTags.toString()}`)
+              Error(
+                `getMatchingTags: tags = ${matchingTags.toString()}, err = ${err}`
+              )
             );
           } else if (code !== 200) {
             return reject(

@@ -132,6 +132,9 @@ describe('writePackage', () => {
         // user has push access to repo in package.json
         .get('/repos/foo/bar')
         .reply(200, {permissions: {push: true}})
+        // No releases on GitHub, only tags.
+        .get('/repos/foo/bar/releases/tags/v1.0.0')
+        .reply(404, {})
         // most recent release tag on GitHub is v1.0.0
         .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.0'}]);
@@ -189,9 +192,9 @@ describe('writePackage', () => {
         // user has push access to repo in package.json
         .get('/repos/foo/bar')
         .reply(200, {permissions: {push: true}})
-        // most recent release tag on GitHub is v1.0.0
-        .get('/repos/foo/bar/tags?per_page=100&page=1')
-        .reply(200, [{name: 'v1.0.0'}]);
+        // Matching release found on GitHub.
+        .get('/repos/foo/bar/releases/tags/v1.0.0')
+        .reply(200, {name: 'v1.0.0'});
 
       const ret = await writePackage('@soldair/foo', req, res);
       npmRequest.done();
@@ -246,7 +249,10 @@ describe('writePackage', () => {
         // user has push access to repo in package.json
         .get('/repos/foo/bar')
         .reply(200, {permissions: {push: true}})
-        // most recent release tag on GitHub is v1.0.0
+        // No release on GitHub, only tags.
+        .get('/repos/foo/bar/releases/tags/v1.0.0')
+        .reply(404, {})
+        // most recent tag on GitHub is v1.0.0
         .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.0'}]);
 
@@ -311,7 +317,7 @@ describe('writePackage', () => {
       expect(ret.statusCode).to.equal(400);
     });
 
-    it('rejects publication if no corresponding release found on GitHub', async () => {
+    it('rejects publication if no corresponding release or tags found on GitHub', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
         getPublishKey: async (): Promise<PublishKey | false> => {
@@ -357,6 +363,9 @@ describe('writePackage', () => {
         // user has push access to repo in package.json
         .get('/repos/foo/bar')
         .reply(200, {permissions: {push: true}})
+        // No matching release.
+        .get('/repos/foo/bar/releases/tags/v1.0.0')
+        .reply(404, {})
         // most recent release tag on GitHub is v0.1.0
         .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: 'v0.1.0'}])
@@ -388,7 +397,7 @@ describe('writePackage', () => {
       expect(ret.statusCode).to.equal(400);
     });
 
-    it('rejects publication if listing tags rerturns non-200', async () => {
+    it('rejects publication if listing tags returns non-200', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
         getPublishKey: async (): Promise<PublishKey | false> => {
@@ -434,7 +443,10 @@ describe('writePackage', () => {
         // user has push access to repo in package.json
         .get('/repos/foo/bar')
         .reply(200, {permissions: {push: true}})
-        // most recent release tag on GitHub is v0.1.0
+        // No matching release
+        .get('/repos/foo/bar/releases/tags/v1.0.0')
+        .reply(404, {})
+        // Error while fetching tags
         .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(500);
 
@@ -445,7 +457,7 @@ describe('writePackage', () => {
       expect(ret.statusCode).to.equal(500);
     });
 
-    it('allows package with monorepo token to be updated', async () => {
+    it('allows package with monorepo token to be updated based on matching release', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
         getPublishKey: async (): Promise<PublishKey | false> => {
@@ -492,7 +504,130 @@ describe('writePackage', () => {
         // user has push access to repo in package.json
         .get('/repos/foo/bar')
         .reply(200, {permissions: {push: true}})
-        // most recent release tag on GitHub is v1.0.0
+        // Matching release for monorepo-style tag. No need to check additional tags.
+        .get('/repos/foo/bar/releases/tags/foo-v1.0.0')
+        .reply(200, {name: 'foo-v1.0.0'});
+
+      const ret = await writePackage('@soldair/foo', req, res);
+      npmRequest.done();
+      githubRequest.done();
+      expect(ret.statusCode).to.equal(200);
+      expect(ret.newPackage).to.equal(false);
+    });
+
+    it('allows package with monorepo token and lerna-style tags to be updated based on matching release', async () => {
+      // Fake that there's a releaseAs2FA key in datastore:
+      writePackage.datastore = Object.assign({}, datastore, {
+        getPublishKey: async (): Promise<PublishKey | false> => {
+          return {
+            username: 'bcoe',
+            created: 1578630249529,
+            value: 'deadbeef',
+            releaseAs2FA: true,
+            monorepo: true,
+          };
+        },
+        getUser: async (): Promise<false | User> => {
+          return {name: 'bcoe', token: 'deadbeef'};
+        },
+      });
+      writePackage.pipeToNpm = (
+        req: Request,
+        res: Response,
+        drainedBody: false | Buffer,
+        newPackage: boolean
+      ): Promise<WriteResponse> => {
+        return Promise.resolve({statusCode: 200, newPackage});
+      };
+
+      // Simulate a publication request to the proxy:
+      const req = writePackageRequest(
+        {authorization: 'token: abc123'},
+        createPackument('@soldair/foo')
+          .addVersion('1.0.0', 'https://github.com/foo/bar')
+          .packument()
+      );
+      const res = mockResponse();
+
+      const npmRequest = nock('https://registry.npmjs.org')
+        .get('/@soldair%2ffoo')
+        .reply(
+          200,
+          createPackument('@soldair/foo')
+            .addVersion('0.1.0', 'https://github.com/foo/bar')
+            .packument()
+        );
+
+      const githubRequest = nock('https://api.github.com')
+        // user has push access to repo in package.json
+        .get('/repos/foo/bar')
+        .reply(200, {permissions: {push: true}})
+        // Matching release for lerna-style tag. No need to check additional tags.
+        .get('/repos/foo/bar/releases/tags/foo-v1.0.0')
+        .reply(404, {})
+        .get('/repos/foo/bar/releases/tags/@soldair/foo@1.0.0')
+        .reply(200, {name: '@soldair/foo@1.0.0'});
+
+      const ret = await writePackage('@soldair/foo', req, res);
+      npmRequest.done();
+      githubRequest.done();
+      expect(ret.statusCode).to.equal(200);
+      expect(ret.newPackage).to.equal(false);
+    });
+
+    it('allows package with monorepo token to be updated based on tags but no matching release', async () => {
+      // Fake that there's a releaseAs2FA key in datastore:
+      writePackage.datastore = Object.assign({}, datastore, {
+        getPublishKey: async (): Promise<PublishKey | false> => {
+          return {
+            username: 'bcoe',
+            created: 1578630249529,
+            value: 'deadbeef',
+            releaseAs2FA: true,
+            monorepo: true,
+          };
+        },
+        getUser: async (): Promise<false | User> => {
+          return {name: 'bcoe', token: 'deadbeef'};
+        },
+      });
+      writePackage.pipeToNpm = (
+        req: Request,
+        res: Response,
+        drainedBody: false | Buffer,
+        newPackage: boolean
+      ): Promise<WriteResponse> => {
+        return Promise.resolve({statusCode: 200, newPackage});
+      };
+
+      // Simulate a publication request to the proxy:
+      const req = writePackageRequest(
+        {authorization: 'token: abc123'},
+        createPackument('@soldair/foo')
+          .addVersion('1.0.0', 'https://github.com/foo/bar')
+          .packument()
+      );
+      const res = mockResponse();
+
+      const npmRequest = nock('https://registry.npmjs.org')
+        .get('/@soldair%2ffoo')
+        .reply(
+          200,
+          createPackument('@soldair/foo')
+            .addVersion('0.1.0', 'https://github.com/foo/bar')
+            .packument()
+        );
+
+      const githubRequest = nock('https://api.github.com')
+        // user has push access to repo in package.json
+        .get('/repos/foo/bar')
+        .reply(200, {permissions: {push: true}})
+        // No matching releases for either tag type.
+        .get('/repos/foo/bar/releases/tags/foo-v1.0.0')
+        .reply(404, {})
+        .get('/repos/foo/bar/releases/tags/@soldair/foo@1.0.0')
+        .reply(404, {})
+        // But there is a matching tag for v1.0.0
         .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: 'foo-v1.0.0'}]);
 
@@ -503,7 +638,7 @@ describe('writePackage', () => {
       expect(ret.newPackage).to.equal(false);
     });
 
-    it('allows package with monorepo token and lerna-style tags to be updated', async () => {
+    it('allows package with monorepo token and lerna-style tags to be updated based on tags but no matching release', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
       writePackage.datastore = Object.assign({}, datastore, {
         getPublishKey: async (): Promise<PublishKey | false> => {
@@ -550,6 +685,11 @@ describe('writePackage', () => {
         // user has push access to repo in package.json
         .get('/repos/foo/bar')
         .reply(200, {permissions: {push: true}})
+        // No matching releases matching either style.
+        .get('/repos/foo/bar/releases/tags/foo-v1.0.0')
+        .reply(404, {})
+        .get('/repos/foo/bar/releases/tags/@soldair/foo@1.0.0')
+        .reply(404, {})
         // most recent release tag on GitHub is v1.0.0
         .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: '@soldair/foo@1.0.0'}]);
@@ -608,6 +748,11 @@ describe('writePackage', () => {
         // user has push access to repo in package.json
         .get('/repos/foo/bar')
         .reply(200, {permissions: {push: true}})
+        // No matching releases for either tag style.
+        .get('/repos/foo/bar/releases/tags/foo-v1.0.0')
+        .reply(404, {})
+        .get('/repos/foo/bar/releases/tags/@soldair/foo@1.0.0')
+        .reply(404, {})
         // This is monorepo-style token but the tags on GH are not monorepo-style
         .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.0'}])
