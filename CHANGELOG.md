@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented here.
 
+## [2.1.0](https://github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v2.0.0...v2.1.0) (2022-07-06)
+
+
+### Features
+
+* search matching releases on GitHub before falling back to tags ([#169](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/169)) ([8deacf2](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/8deacf20e7ecd5acec808bf148f3ba087acfde00))
+
+
+### Bug Fixes
+
+* **deps:** update dependency @google-cloud/datastore to v7 ([#160](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/160)) ([009e2df](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/009e2dfac6868c312687f3ffdd175e1fe7c565c4))
+* **deps:** update dependency @testing-library/user-event to v14 ([#162](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/162)) ([d5b52c1](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/d5b52c1224d48f5ebacdab28c463e6626592acb7))
+* respond to 404 errors when checking releases, and fall back to tags if any errors ([#171](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/171)) ([89746a5](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/89746a58afe4419f48d0712952b74a732fdb0cbc))
+
 ## [2.0.0](https://github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v1.1.0...v2.0.0) (2022-06-17)
 
 
