@@ -298,13 +298,14 @@ async function enforceMatchingRelease(
       const msg = `matching release v${newVersion} not found for ${repoName}. Did not find any tags matching: ${tags.join()}`;
       throw new WombatServerError(msg, 400);
     }
-  } catch (_err) {
-    // TODO(#158): This can swallow some errors that do have messages
-    const err = _err as {statusMessage: string; statusCode: number};
-    if (err.statusCode && err.statusMessage) throw err;
-    err.statusCode = 500;
-    err.statusMessage = 'unknown error';
-    throw err;
+  } catch (err) {
+    if (err instanceof WombatServerError) {
+      throw err;
+    }
+    if (err instanceof Error) {
+      throw new WombatServerError(err.message || 'unknown error', 500);
+    }
+    throw new WombatServerError('unknown error', 500);
   }
 }
 
