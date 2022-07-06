@@ -134,7 +134,7 @@ describe('writePackage', () => {
         .reply(200, {permissions: {push: true}})
         // No releases on GitHub, only tags.
         .get('/repos/foo/bar/releases/tags/v1.0.0')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         // most recent release tag on GitHub is v1.0.0
         .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.0'}]);
@@ -251,7 +251,7 @@ describe('writePackage', () => {
         .reply(200, {permissions: {push: true}})
         // No release on GitHub, only tags.
         .get('/repos/foo/bar/releases/tags/v1.0.0')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         // most recent tag on GitHub is v1.0.0
         .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.0'}]);
@@ -365,7 +365,7 @@ describe('writePackage', () => {
         .reply(200, {permissions: {push: true}})
         // No matching release.
         .get('/repos/foo/bar/releases/tags/v1.0.0')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         // most recent release tag on GitHub is v0.1.0
         .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: 'v0.1.0'}])
@@ -445,7 +445,7 @@ describe('writePackage', () => {
         .reply(200, {permissions: {push: true}})
         // No matching release
         .get('/repos/foo/bar/releases/tags/v1.0.0')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         // Error while fetching tags
         .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(500);
@@ -453,7 +453,7 @@ describe('writePackage', () => {
       const ret = await writePackage('@soldair/foo', req, res);
       npmRequest.done();
       githubRequest.done();
-      expect(ret.error).to.match(/unknown error/);
+      expect(ret.error).to.match(/Error 500/);
       expect(ret.statusCode).to.equal(500);
     });
 
@@ -564,7 +564,7 @@ describe('writePackage', () => {
         .reply(200, {permissions: {push: true}})
         // Matching release for lerna-style tag. No need to check additional tags.
         .get('/repos/foo/bar/releases/tags/foo-v1.0.0')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         .get('/repos/foo/bar/releases/tags/@soldair/foo@1.0.0')
         .reply(200, {name: '@soldair/foo@1.0.0'});
 
@@ -624,9 +624,9 @@ describe('writePackage', () => {
         .reply(200, {permissions: {push: true}})
         // No matching releases for either tag type.
         .get('/repos/foo/bar/releases/tags/foo-v1.0.0')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         .get('/repos/foo/bar/releases/tags/@soldair/foo@1.0.0')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         // But there is a matching tag for v1.0.0
         .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: 'foo-v1.0.0'}]);
@@ -687,9 +687,9 @@ describe('writePackage', () => {
         .reply(200, {permissions: {push: true}})
         // No matching releases matching either style.
         .get('/repos/foo/bar/releases/tags/foo-v1.0.0')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         .get('/repos/foo/bar/releases/tags/@soldair/foo@1.0.0')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         // most recent release tag on GitHub is v1.0.0
         .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: '@soldair/foo@1.0.0'}]);
@@ -750,9 +750,9 @@ describe('writePackage', () => {
         .reply(200, {permissions: {push: true}})
         // No matching releases for either tag style.
         .get('/repos/foo/bar/releases/tags/foo-v1.0.0')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         .get('/repos/foo/bar/releases/tags/@soldair/foo@1.0.0')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         // This is monorepo-style token but the tags on GH are not monorepo-style
         .get('/repos/foo/bar/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.0'}])

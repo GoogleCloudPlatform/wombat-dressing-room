@@ -49,7 +49,7 @@ describe('github', () => {
     it('returns release matching lerna-style tag', async () => {
       const request = nock('https://api.github.com')
         .get('/repos/bcoe/test/releases/tags/test-v1.0.2')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         .get('/repos/bcoe/test/releases/tags/@bcoe/test@1.0.2')
         .reply(200, {name: '@bcoe/test@1.0.2'});
 
@@ -64,7 +64,19 @@ describe('github', () => {
     it('returns matching tag from GitHub if no release found', async () => {
       const request = nock('https://api.github.com')
         .get('/repos/bcoe/test/releases/tags/v1.0.2')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
+        .get('/repos/bcoe/test/tags?per_page=100&page=1')
+        .reply(200, [{name: 'v1.0.2'}]);
+
+      const latest = await github.getRelease('bcoe/test', 'abc123', ['v1.0.2']);
+      expect(latest).to.equal('v1.0.2');
+      request.done();
+    });
+
+    it('checks tags if there is an error while checking releases', async () => {
+      const request = nock('https://api.github.com')
+        .get('/repos/bcoe/test/releases/tags/v1.0.2')
+        .replyWithError({statusCode: 500})
         .get('/repos/bcoe/test/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.2'}]);
 
@@ -76,7 +88,7 @@ describe('github', () => {
     it('bubbles error appropriately', async () => {
       const request = nock('https://api.github.com')
         .get('/repos/bcoe/test/releases/tags/v1.0.2')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         .get('/repos/bcoe/test/tags?per_page=100&page=1')
         .reply(404);
       let err: Error | undefined = undefined;
@@ -95,9 +107,9 @@ describe('github', () => {
     it('does not return latest tag without prefix, when monorepo-style used', async () => {
       const request = nock('https://api.github.com')
         .get('/repos/bcoe/test/releases/tags/foo-v1.0.2')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         .get('/repos/bcoe/test/releases/tags/@scope/foo@1.0.2')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         .get('/repos/bcoe/test/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.2'}])
         .get('/repos/bcoe/test/tags?per_page=100&page=2')
@@ -133,7 +145,7 @@ describe('github', () => {
     it('returns latest tag matching monorepo style tag', async () => {
       const request = nock('https://api.github.com')
         .get('/repos/bcoe/test/releases/tags/foo-v1.0.2')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         .get('/repos/bcoe/test/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.3'}])
         .get('/repos/bcoe/test/tags?per_page=100&page=2')
@@ -151,7 +163,7 @@ describe('github', () => {
     it('returns latest tag matching lerna style tag', async () => {
       const request = nock('https://api.github.com')
         .get('/repos/bcoe/test/releases/tags/@scope/foo@1.0.2')
-        .reply(404, {})
+        .replyWithError({statusCode: 404})
         .get('/repos/bcoe/test/tags?per_page=100&page=1')
         .reply(200, [{name: 'v1.0.3'}])
         .get('/repos/bcoe/test/tags?per_page=100&page=2')

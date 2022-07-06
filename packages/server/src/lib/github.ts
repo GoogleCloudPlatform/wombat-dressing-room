@@ -66,9 +66,16 @@ export const getRelease = async (
   token: string,
   tags: string[]
 ): Promise<string | undefined> => {
-  const matchingRelease = await getReleaseForTags(name, token, tags);
-  if (matchingRelease) {
-    return matchingRelease;
+  try {
+    const matchingRelease = await getReleaseForTags(name, token, tags);
+    if (matchingRelease) {
+      return matchingRelease;
+    }
+  } catch (err) {
+    // Fall back to checking for matching tags instead of throwing the error.
+    console.error(
+      `Error while checking releases: ${err}. Checking tags instead.`
+    );
   }
   return getMatchingTags(name, token, tags);
 };
@@ -93,13 +100,20 @@ const getReleaseForTags = async (
       client.get(
         `/repos/${name}/releases/tags/${tag}`,
         {},
-        (err: Error, code: number, resp: {name: string}) => {
+        (err: {statusCode: number}, code: number, resp: {name: string}) => {
           if (err) {
-            return reject(
-              Error(`getReleaseForTags: tag = ${tag}, err = ${err}`)
-            );
+            if (err.statusCode === 404) {
+              // A release matching this tag wasn't found. This isn't an error, just try the next tag in the list.
+              return resolve(undefined);
+            } else {
+              return reject(
+                Error(
+                  `getReleaseForTags: tag = ${tag}, statusCode = ${err.statusCode}, err = ${err}`
+                )
+              );
+            }
           }
-          resolve(resp.name || undefined);
+          resolve(resp?.name || undefined);
         }
       );
     });
