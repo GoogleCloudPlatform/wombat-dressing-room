@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented here.
 
+## [2.1.1](https://github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v2.1.0...v2.1.1) (2023-02-24)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @types/jest to v29 ([#175](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/175)) ([5713881](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/57138817bab6e5e59d2d4339a5f77193ebd05a26))
+* **deps:** update dependency @types/node to v18 ([#181](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/181)) ([4818e3c](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/4818e3c264a435fac8d744e320709990ea32a467))
+* **deps:** update dependency uuid to v9 ([#191](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/191)) ([148f159](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/148f15975d8339d7bd13a443c797e3d76b91d280))
+* **deps:** update dependency validate-npm-package-name to v5 ([#192](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/192)) ([b562541](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/b562541d827f64ca186e064719bd4133daaf9bad))
+
 ## [2.1.0](https://github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v2.0.0...v2.1.0) (2022-07-06)
 
 
