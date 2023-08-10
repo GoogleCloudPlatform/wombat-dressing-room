@@ -45,7 +45,7 @@
     "typescript": "^4.0.0"
   },
   "dependencies": {
-    "@google-cloud/datastore": "^7.0.0",
+    "@google-cloud/datastore": "^8.0.0",
     "@npm/types": "^1.0.1",
     "@otplib/preset-default": "^12.0.0",
     "cookie-session": "^2.0.0-beta.3",
