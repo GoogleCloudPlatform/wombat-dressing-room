@@ -141,7 +141,7 @@ export const writePackage = async (
   }
 
   let repoResp = null;
-  let repoName = config.githubRepoName ?? (repo as {name: string}).name;
+  const repoName = config.githubRepoName ?? (repo as {name: string}).name;
   try {
     repoResp = await github.getRepo(repoName, user.token);
   } catch (e) {
