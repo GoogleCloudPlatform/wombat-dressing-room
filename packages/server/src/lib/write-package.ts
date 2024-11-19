@@ -131,9 +131,9 @@ export const writePackage = async (
 
   // make sure publish user has permission to publish the package
   // get the github repository from packument
-  if (!repo || !config.githubRepoName) {
+  if (!repo && !config.githubRepoName) {
     console.info(
-      'failed to find repository in latest.repository or latest.permsRepo field.'
+      'failed to find repository in latest.repository or latest.permsRepo field or env variable GITHUB_REPO_NAME was not set'
     );
     const msg =
       'In order to publish through wombat the latest version on npm must have a repository pointing to github';
@@ -141,12 +141,12 @@ export const writePackage = async (
   }
 
   let repoResp = null;
-  let repoName = repo.name ?? config.githubRepoName;
+  let repoName = config.githubRepoName ?? (repo as {name: string}).name;
   try {
     repoResp = await github.getRepo(repoName, user.token);
   } catch (e) {
     console.info('failed to get repo response for ' + (repoName) + ' ' + e);
-    const msg = `repository ${repo.url ?? config.githubRepoName} doesn't exist or ${user.name} doesn't have access.`;
+    const msg = `repository ${(repo as {url: string}).url ?? config.githubRepoName} doesn't exist or ${user.name} doesn't have access.`;
     return respondWithError(res, msg, 400);
   }
 
