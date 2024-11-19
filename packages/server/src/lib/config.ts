@@ -41,6 +41,8 @@ export const config = {
   // if users should be able to login.
   loginEnabled: process.env.LOGIN_ENABLED === 'yes-this-is-a-login-server',
   projectId: process.env.DATASTORE_PROJECT_ID,
+  // alternate github address to use so wombat can look up a repo
+  githubRepoAddress: process.env.GITHUB_REPO_ADDRESS,
 };
 
 if (process.env.NODE_ENV !== 'test') {
