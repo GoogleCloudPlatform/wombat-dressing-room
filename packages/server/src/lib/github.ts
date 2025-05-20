@@ -124,7 +124,7 @@ const getReleaseForTags = async (
       return release;
     }
   }
-  console.info("No matching releases found.")
+  console.info('No matching releases found.');
   return undefined;
 };
 
@@ -147,7 +147,9 @@ const getMatchingTags = async (
   // using a large page size to allow for monorepos with 100s of tags:
   const maxPagination = 12;
   for (let page = 1; page < maxPagination; page++) {
-    console.info(`Quering /repos/${name}/tags with 100 per page and page: ${page}`);
+    console.info(
+      `Quering /repos/${name}/tags with 100 per page and page: ${page}`
+    );
     const tags: [{name: string}] = await new Promise((resolve, reject) => {
       client.get(
         `/repos/${name}/tags`,
@@ -179,7 +181,7 @@ const getMatchingTags = async (
       }
     }
   }
-  console.info("No matching tags found.");
+  console.info('No matching tags found.');
   return undefined;
 };
 
