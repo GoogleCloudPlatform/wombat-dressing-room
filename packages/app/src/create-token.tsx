@@ -29,6 +29,7 @@ import Paper from '@mui/material/Paper';
 import { styled } from '@mui/material/styles';
 import TextField from '@mui/material/TextField';
 
+import { useAccount } from './account-provider.tsx';
 import Nav from './nav.tsx';
 import { useTokens } from './tokens-provider.tsx';
 
@@ -41,6 +42,8 @@ const Item = styled(Paper)(({ theme }) => ({
 
 export default function CreateToken() {
   const tokens = useTokens();
+  const account = useAccount();
+  console.log('CreateToken ott:', account.ott);
   const [state, setState] = React.useState({
     monorepo: false,
     packageName: '',

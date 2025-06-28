@@ -57,6 +57,7 @@ export function TokensProvider({ children }: { children: React.ReactNode }) {
     if (account.ott) {
       body.ott = account.ott;
     }
+    console.log('creating token with body', body);
     const req = await fetch('/_/token', {
       method: 'PUT',
       headers: {

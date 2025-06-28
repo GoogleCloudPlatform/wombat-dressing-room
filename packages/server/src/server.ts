@@ -38,6 +38,15 @@ import {putDeleteVersion} from './routes/put-delete-version';
 
 import {WriteResponse} from './lib/write-package';
 
+const log = console.log;
+console.log = (...args) => {
+  log(new Date().toISOString(), ...args);
+};
+const error = console.error;
+console.error = (...args) => {
+  error(new Date().toISOString(), ...args);
+};
+
 const ONE_DAY = 1000 * 60 * 60 * 24;
 const app = express();
 
@@ -49,7 +58,7 @@ morgan.token('cleanurl', (req: express.Request) =>
 );
 app.use(
   morgan(
-    ':remote-addr :remote-user :method :cleanurl HTTP/:http-version :status :res[content-length] - :response-time ms',
+    ':date[iso] :remote-addr :remote-user :method :cleanurl HTTP/:http-version :status :res[content-length] - :response-time ms',
     {stream: process.stdout}
   )
 );
@@ -150,11 +159,18 @@ app.use(
  * API endpoints against server that does not have frontend enabled.
  */
 const redirectToLoginServer = (req: express.Request, res: express.Response) => {
+  console.log(
+    'Debug: redirectToLoginServer called.',
+    'loginEnabled:',
+    Config.config.loginEnabled,
+    'userLoginUrl:',
+    Config.config.userLoginUrl
+  );
   if (!Config.config.loginEnabled) {
     if (req.query.redir) {
       res.end('login disabled and there is maybe a redirect loop.');
     } else if (Config.config.userLoginUrl) {
-      res.redirect(Config.config.userLoginUrl + req.url);
+      res.redirect(Config.config.userLoginUrl + req.path);
     } else {
       res.end("these are not the droids you're looking for");
     }
@@ -402,6 +418,7 @@ app.put(
 
     const result = (await drainRequest(req)) + '';
     const body = json(result);
+    console.log('token request with body', body);
 
     // TODO handle
     if (!req.session!.token) {
