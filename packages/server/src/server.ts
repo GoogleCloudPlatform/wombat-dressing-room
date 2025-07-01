@@ -91,7 +91,15 @@ function avoidCSRF(req: express.Request, res: express.Response) {
  * Static routes. Each of /, /_/help, /_/login, etc.,
  * serves react app bundle.
  */
-const staticRoot = path.join(__dirname, '../../../../public');
+/*
+ * When running tests, `ts-node` runs from the `src` directory.
+ * In production, the code is run from the `build` directory.
+ * This conditional path ensures that the static assets are found in both environments.
+ */
+const staticRoot =
+  process.env.NODE_ENV === 'test'
+    ? path.join(__dirname, '../../../public')
+    : path.join(__dirname, '../../../../public');
 app.get('/', (req, res) => {
   if (redirectToLoginServer(req, res)) {
     return;
@@ -163,6 +171,8 @@ const redirectToLoginServer = (req: express.Request, res: express.Response) => {
     'Debug: redirectToLoginServer called.',
     'loginEnabled:',
     Config.config.loginEnabled,
+    'process.env.LOGIN_ENABLED:',
+    process.env.LOGIN_ENABLED,
     'userLoginUrl:',
     Config.config.userLoginUrl
   );
