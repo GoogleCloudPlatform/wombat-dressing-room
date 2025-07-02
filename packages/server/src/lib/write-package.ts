@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Packument} from '@npm/types';
+import {Packument, Repository} from '@npm/types';
 import {Request, Response} from 'express';
 import * as request from 'request';
 
@@ -87,11 +87,43 @@ export const writePackage = async (
   let latest = undefined;
 
   let newPackage = false;
-  let drainedBody: false | Buffer = false;
+  const drainedBody = await drainRequest(req);
+  let newPackument;
+  try {
+    newPackument = parsePackument(drainedBody);
+  } catch (_e) {
+    const e = _e as {statusMessage: string; statusCode: number};
+    return respondWithError(res, e.statusMessage, e.statusCode);
+  }
+
+  // Wombat dressing room verifies the repository permission in the last
+  // release as well as the one being published.
+  const reposToVerifyPermissions = new Set<Repository>();
+  if (newPackument['dist-tags']) {
+    const distTags = newPackument['dist-tags'];
+    const latestVersion = distTags.latest;
+    if (latestVersion) {
+      const newPackumentVersion = newPackument.versions[latestVersion];
+      console.info(
+        'The new package has the version ' +
+          latestVersion +
+          '. This has repository: ' +
+          JSON.stringify(newPackumentVersion.repository)
+      );
+      if (newPackumentVersion.repository) {
+        reposToVerifyPermissions.add(newPackumentVersion.repository);
+      } else {
+        const msg = `The repository is undefined in the package.json (${latestVersion})`;
+        return respondWithError(res, msg, 400);
+      }
+    } else {
+      console.info('Dist-tags didn not include latest version');
+    }
+  }
+
   if (!doc || doc?.time?.unpublished) {
     // this is a completely new package.
     newPackage = true;
-    drainedBody = await drainRequest(req);
     // set latest so we use the repository of the new package to verify github
     // permissions
     try {
@@ -126,12 +158,14 @@ export const writePackage = async (
   }
 
   console.info('latest repo ', latest.permsRepo ?? latest.repository);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const repo = repoToGithub(latest.permsRepo ?? latest.repository);
 
-  // make sure publish user has permission to publish the package
-  // get the github repository from packument
-  if (!repo) {
+  const lastReleaseRepo = latest.permsRepo ?? latest.repository;
+  const repo = repoToGithub(lastReleaseRepo);
+  if (lastReleaseRepo && repo) {
+    reposToVerifyPermissions.add(lastReleaseRepo);
+  } else {
+    // make sure publish user has permission to publish the package
+    // get the github repository from packument
     console.info(
       'failed to find repository in latest.repository or latest.permsRepo field.'
     );
@@ -139,26 +173,36 @@ export const writePackage = async (
       'In order to publish through wombat the latest version on npm must have a repository pointing to github';
     return respondWithError(res, msg, 400);
   }
+  for (const repoToVerifyPermission of reposToVerifyPermissions) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const repo = repoToGithub(repoToVerifyPermission);
+    if (!repo) {
+      const msg =
+        'Could not construct repo object: ' +
+        JSON.stringify(repoToVerifyPermission);
+      return respondWithError(res, msg, 400);
+    }
 
-  let repoResp = null;
-  try {
-    repoResp = await github.getRepo(repo.name, user.token);
-  } catch (e) {
-    console.info('failed to get repo response for ' + repo.name + ' ' + e);
-    const msg = `repository ${repo.url} doesn't exist or ${user.name} doesn't have access.`;
-    return respondWithError(res, msg, 400);
-  }
+    let repoResp = null;
+    try {
+      repoResp = await github.getRepo(repo.name, user.token);
+    } catch (e) {
+      console.info('failed to get repo response for ' + repo.name + ' ' + e);
+      const msg = `repository ${repo.url} doesn't exist or ${user.name} doesn't have access.`;
+      return respondWithError(res, msg, 400);
+    }
 
-  if (!repoResp) {
-    const msg = `in order to publish the latest version must have a repository ${user.name} can't see it`;
-    return respondWithError(res, msg, 400);
-  }
+    if (!repoResp) {
+      const msg = `in order to publish the latest version must have a repository ${user.name} can't see it`;
+      return respondWithError(res, msg, 400);
+    }
 
-  console.info('repo response!', repoResp.permissions);
+    console.info('repo response!', repoResp.permissions);
 
-  if (!(repoResp.permissions.push || repoResp.permissions.admin)) {
-    const msg = `${user.name} cannot push repo ${repo.url}. push permission required to publish.`;
-    return respondWithError(res, msg, 400);
+    if (!(repoResp.permissions.push || repoResp.permissions.admin)) {
+      const msg = `${user.name} cannot push repo ${repo.url}. push permission required to publish.`;
+      return respondWithError(res, msg, 400);
+    }
   }
 
   // If the publication key has been configured with GitHub releases as a
@@ -166,13 +210,12 @@ export const writePackage = async (
   // in the new packument aligns with the latest release created on GitHub:
   if (pubKey.releaseAs2FA) {
     console.info('token uses releases as 2FA');
-    drainedBody = drainedBody || (await drainRequest(req));
     try {
       await enforceMatchingRelease(
         repo.name,
         user.token,
         newPackage ? undefined : doc,
-        drainedBody,
+        newPackument,
         pubKey.monorepo
       );
     } catch (_e) {
@@ -187,7 +230,7 @@ export const writePackage = async (
 writePackage.pipeToNpm = (
   req: Request,
   res: Response,
-  drainedBody: false | Buffer,
+  drainedBody: Buffer,
   newPackage: boolean
 ): Promise<WriteResponse> => {
   // update auth information to be the publish user.
@@ -201,13 +244,8 @@ writePackage.pipeToNpm = (
   });
 
   // if we've buffered the publish request already
-  if (drainedBody) {
-    npmreq.pipe(res);
-    npmreq.write(drainedBody);
-    // TODO: missing end here? make sure this path is covered.
-  } else {
-    req.pipe(npmreq).pipe(res);
-  }
+  npmreq.pipe(res);
+  npmreq.write(drainedBody);
 
   req.on('error', (e: Error) => {
     console.info('oh how strange. request errored', e);
@@ -226,6 +264,25 @@ writePackage.pipeToNpm = (
   });
 };
 
+function parsePackument(drainedBody: Buffer): Packument {
+  try {
+    console.log('drainedBody:', drainedBody + '');
+    const maybePackument = JSON.parse(drainedBody + '');
+    // Check whether the publish document contains either a
+    // "latest" or "next" tag:
+    const newPackument = maybePackument as Packument;
+    return newPackument;
+  } catch (err) {
+    if (err instanceof WombatServerError) {
+      throw err;
+    }
+    if (err instanceof Error) {
+      throw new WombatServerError(err.message || 'unknown error', 500);
+    }
+    throw new WombatServerError('unknown error', 500);
+  }
+}
+
 /*
  * Throws an exception if a matching GitHub release cannot be found for the
  * packument that is being published to npm.
@@ -234,23 +291,17 @@ async function enforceMatchingRelease(
   repoName: string,
   token: string,
   lastPackument: Packument | undefined,
-  drainedBody: Buffer,
+  newPackument: Packument,
   monorepo?: boolean
 ) {
   try {
-    const maybePackument = JSON.parse(drainedBody + '');
-    if (
-      typeof maybePackument !== 'object' ||
-      maybePackument['dist-tags'] === undefined
-    ) {
+    if (newPackument['dist-tags'] === undefined) {
       throw new WombatServerError(
         'Release-backed tokens should be used exclusively for publication.',
         400
       );
     }
-    // Check whether the publish document contains either a
-    // "latest" or "next" tag:
-    const newPackument = maybePackument as Packument;
+
     let newVersionPackument =
       newPackument.versions[newPackument['dist-tags'].latest || ''];
     if (!newVersionPackument) {
