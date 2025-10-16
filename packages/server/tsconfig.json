@@ -8,6 +8,10 @@
     "src/*.ts",
     "src/**/*.ts",
     "test/*.ts",
-    "test/**/*.ts"
-  ]
+    "test/**/*.ts",
+    "src/custom.d.ts"
+  ],
+  "ts-node": {
+    "files": true
+  }
 }

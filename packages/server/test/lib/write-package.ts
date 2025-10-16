@@ -53,7 +53,7 @@ describe('writePackage', () => {
     expect(ret.error).to.match(/publish key not found/);
   });
 
-  it('responds with 400 if packument has no repository field', async () => {
+  it('responds with 400 (bad request) if packument has no repository field', async () => {
     // Fake that there's a releaseAs2FA key in datastore:
     writePackage.datastore = Object.assign({}, datastore, {
       getPublishKey: async (): Promise<PublishKey | false> => {
@@ -72,6 +72,8 @@ describe('writePackage', () => {
     // Simulate a publication request to the proxy:
     const req = writePackageRequest(
       {authorization: 'token: abc123'},
+      // Notice the second argument of addVersion (repository)
+      // is not specified.
       createPackument('@soldair/foo').addVersion('1.0.0').packument()
     );
     const res = mockResponse();
@@ -84,7 +86,9 @@ describe('writePackage', () => {
 
     const ret = await writePackage('@soldair/foo', req, res);
     npmRequest.done();
-    expect(ret.error).to.match(/must have a repository/);
+    expect(ret.error).to.match(
+      /The repository is undefined in the package.json/
+    );
     expect(ret.statusCode).to.equal(400);
   });
 

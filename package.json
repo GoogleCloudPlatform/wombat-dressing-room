@@ -13,6 +13,8 @@
   "scripts": {
     "start": "NODE_ENV=--enable-source-maps node packages/server/build/src/server.js",
     "develop": "cp config/local.env ./.env && npm run compile && npm start",
+    "develop-internal": "cp config/local-internal.env ./.env && npm run compile && PORT=8080 npm start",
+    "develop-external": "cp config/local-external.env ./.env && npm run compile && PORT=8081 npm start",
     "precompile": "rimraf public",
     "compile": "npm run compile-frontend && npm run compile-server",
     "compile-frontend": "mkdir -p public && cd ./packages/app && npm run build && cp -R build/* ../../public",
@@ -32,6 +34,6 @@
   "author": "Google LLC",
   "license": "Apache-2.0",
   "devDependencies": {
-    "rimraf": "^4.0.0"
+    "rimraf": "3.0.2"
   }
 }
