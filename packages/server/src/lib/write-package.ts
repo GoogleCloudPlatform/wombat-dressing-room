@@ -223,7 +223,7 @@ export const writePackage = async (
       return respondWithError(res, e.statusMessage, e.statusCode);
     }
   }
-
+  console.info("All validations passed. Piping the request to npmjs.com.");
   return writePackage.pipeToNpm(req, res, drainedBody, newPackage);
 };
 
