@@ -96,14 +96,16 @@ const getReleaseForTags = async (
 ): Promise<string | undefined> => {
   const client = gh.client(token, clientOptions);
   for (const tag of tags) {
+    const apiPath = `/repos/${name}/releases/tags/${tag}`;
     const release = await new Promise<string | undefined>((resolve, reject) => {
       client.get(
-        `/repos/${name}/releases/tags/${tag}`,
+        apiPath,
         {},
         (err: {statusCode: number}, code: number, resp: {name: string}) => {
           if (err) {
             if (err.statusCode === 404) {
               // A release matching this tag wasn't found. This isn't an error, just try the next tag in the list.
+              console.info(`${apiPath} returned 404`);
               return resolve(undefined);
             } else {
               return reject(
@@ -117,10 +119,12 @@ const getReleaseForTags = async (
         }
       );
     });
+    console.info(`Queried ${apiPath} => %o`, release);
     if (release) {
       return release;
     }
   }
+  console.info('No matching releases found.');
   return undefined;
 };
 
@@ -143,6 +147,9 @@ const getMatchingTags = async (
   // using a large page size to allow for monorepos with 100s of tags:
   const maxPagination = 12;
   for (let page = 1; page < maxPagination; page++) {
+    console.info(
+      `Quering /repos/${name}/tags with 100 per page and page: ${page}`
+    );
     const tags: [{name: string}] = await new Promise((resolve, reject) => {
       client.get(
         `/repos/${name}/tags`,
@@ -174,6 +181,7 @@ const getMatchingTags = async (
       }
     }
   }
+  console.info('No matching tags found.');
   return undefined;
 };
 
