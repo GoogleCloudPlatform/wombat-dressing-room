@@ -63,5 +63,8 @@
         "statements": 88
       }
     }
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

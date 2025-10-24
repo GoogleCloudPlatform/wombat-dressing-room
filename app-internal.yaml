@@ -1,1 +1,2 @@
-runtime: nodejs12
+runtime: nodejs20
+#service: internal

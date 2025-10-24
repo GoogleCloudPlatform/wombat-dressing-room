@@ -60,5 +60,8 @@
     "source-map-support": "^0.5.9",
     "uuid": "^9.0.0",
     "validate-npm-package-name": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
