@@ -617,11 +617,16 @@ app.get(
     const token = auth.split(' ').pop();
     const pubKey = await datastore.getPublishKey(token + '');
 
-    if (pubKey) {
-      return res.end(`{"username":"github_user:${pubKey.username}"}`);
+    if (
+      // No valid publish key was found
+      pubKey === false ||
+      // A valid publish was found, but is past its expiration
+      (pubKey.expiration && pubKey.expiration < Date.now())
+    ) {
+      return res.end('{}');
     }
 
-    res.end('{}');
+    return res.end(`{"username":"github_user:${pubKey.username}"}`);
   })
 );
 
