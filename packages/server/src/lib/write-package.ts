@@ -131,9 +131,9 @@ export const writePackage = async (
 
   // make sure publish user has permission to publish the package
   // get the github repository from packument
-  if (!repo) {
+  if (!repo && !config.githubRepoName) {
     console.info(
-      'failed to find repository in latest.repository or latest.permsRepo field.'
+      'failed to find repository in latest.repository or latest.permsRepo field or env variable GITHUB_REPO_NAME was not set'
     );
     const msg =
       'In order to publish through wombat the latest version on npm must have a repository pointing to github';
@@ -141,11 +141,12 @@ export const writePackage = async (
   }
 
   let repoResp = null;
+  const repoName = config.githubRepoName ?? (repo as {name: string}).name;
   try {
-    repoResp = await github.getRepo(repo.name, user.token);
+    repoResp = await github.getRepo(repoName, user.token);
   } catch (e) {
-    console.info('failed to get repo response for ' + repo.name + ' ' + e);
-    const msg = `repository ${repo.url} doesn't exist or ${user.name} doesn't have access.`;
+    console.info('failed to get repo response for ' + (repoName) + ' ' + e);
+    const msg = `repository ${(repo as {url: string}).url ?? config.githubRepoName} doesn't exist or ${user.name} doesn't have access.`;
     return respondWithError(res, msg, 400);
   }
 
@@ -157,7 +158,7 @@ export const writePackage = async (
   console.info('repo response!', repoResp.permissions);
 
   if (!(repoResp.permissions.push || repoResp.permissions.admin)) {
-    const msg = `${user.name} cannot push repo ${repo.url}. push permission required to publish.`;
+    const msg = `${user.name} cannot push repo ${repoName}. push permission required to publish.`;
     return respondWithError(res, msg, 400);
   }
 
@@ -169,7 +170,7 @@ export const writePackage = async (
     drainedBody = drainedBody || (await drainRequest(req));
     try {
       await enforceMatchingRelease(
-        repo.name,
+        repoName,
         user.token,
         newPackage ? undefined : doc,
         drainedBody,
