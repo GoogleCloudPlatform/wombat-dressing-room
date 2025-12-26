@@ -144,6 +144,8 @@ const getMatchingTags = async (
 ): Promise<string | undefined> => {
   const client = gh.client(token, clientOptions);
   for (const tag of matchingTags) {
+    // GitHub's API is lenient with special characters like '@' and '/' in the
+    // tag name and handles them correctly even if they are not URL encoded.
     const apiPath = `/repos/${name}/git/refs/tags/${tag}`;
     const exists = await new Promise<boolean>((resolve, reject) => {
       client.get(apiPath, (err: {statusCode: number}, code: number) => {
