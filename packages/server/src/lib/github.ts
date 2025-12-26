@@ -130,7 +130,7 @@ const getReleaseForTags = async (
 
 /**
  * Calls GitHub's API to check if a specific tag exists.
- * https://docs.github.com/en/rest/git/refs/tags#get-a-reference
+ * https://docs.github.com/en/rest/git/refs?apiVersion=2022-11-28#get-a-reference
  * @param name repository name including username. ex: node/node or bcoe/yargs
  * @param token
  * @param matchingTags list of possible tag names to fetch. The first one to match will be returned.
