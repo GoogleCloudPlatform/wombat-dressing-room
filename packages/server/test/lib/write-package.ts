@@ -84,7 +84,7 @@ describe('writePackage', () => {
 
     const ret = await writePackage('@soldair/foo', req, res);
     npmRequest.done();
-    expect(ret.error).to.match(/package.json must have a repository/);
+    expect(ret.error).to.match(/must have a repository/);
     expect(ret.statusCode).to.equal(400);
   });
 
@@ -290,9 +290,7 @@ describe('writePackage', () => {
       // simulate a dist-tag update:
       const req = writePackageRequest(
         {authorization: 'token: abc123'},
-        createPackument('@soldair/foo')
-          .addVersion('1.0.0', 'https://github.com/foo/bar')
-          .packument()
+        '0.2.3'
       );
       const res = mockResponse();
 

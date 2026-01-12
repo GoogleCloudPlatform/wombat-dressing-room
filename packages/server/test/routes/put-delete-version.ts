@@ -85,9 +85,7 @@ describe('putDeleteVersion', () => {
     // Simulate a publication request to the proxy:
     const req = writePackageRequest(
       {authorization: 'token: abc123'},
-      createPackument('@soldair/foo')
-        .addVersion('0.1.0', 'https://github.com/foo/bar')
-        .packument(),
+      '0.2.3',
       '@soldair/foo'
     );
     const res = mockResponse();

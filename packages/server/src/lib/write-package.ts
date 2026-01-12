@@ -32,7 +32,6 @@ import {
   PackumentVersionWombat,
 } from './packument';
 import {WombatServerError} from './wombat-server-error';
-import {User} from './datastore';
 
 export interface WriteResponse {
   statusCode: number;
@@ -120,68 +119,52 @@ export const writePackage = async (
     return respondWithError(res, msg, 500);
   }
 
-  drainedBody = drainedBody || (await drainRequest(req));
-  let incomingLatest: PackumentVersionWombat | undefined;
-  try {
-    const incomingDoc = JSON.parse(drainedBody + '') as Packument;
-    incomingLatest = (incomingDoc.versions[
-      incomingDoc['dist-tags'].latest || ''
-    ] || incomingDoc.versions[incomingDoc['dist-tags'].next || '']) as
-      | PackumentVersionWombat
-      | undefined;
-  } catch (e) {
-    console.info('got ' + e + ' parsing publish');
-  }
-
-  if (
-    !incomingLatest ||
-    (!incomingLatest.repository && !incomingLatest.permsRepo)
-  ) {
-    console.info('incoming package.json is missing repository field');
-    const msg = `in order to publish, the package.json must have a repository ${user.name} can access.`;
-    return respondWithError(res, msg, 400);
-  }
-
-  // A set of repositories to confirm users' "push" permissions.
-  // This is not just the latest version but also incoming package.json
-  // to avoid a bad repository value to be published (and cannot be updated).
-  const reposToCheck = new Set<string>();
-
-  // helper to add repository to check list
-  const addRepo = (v: PackumentVersionWombat) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const repoInfo = repoToGithub(v.permsRepo ?? v.repository);
-    if (repoInfo) {
-      reposToCheck.add(repoInfo.name);
-    }
-  };
-
-  // check the repository of the latest version and upcoming package.json
-  addRepo(latest);
-  addRepo(incomingLatest);
-
-  if (reposToCheck.size === 0) {
-    console.info('missing repository for ' + packageName);
+  if (!latest.repository && !latest.permsRepo) {
+    console.info('missing repository in the latest version of ' + packageName);
     const msg = `in order to publish the latest version must have a repository ${user.name} can access.`;
     return respondWithError(res, msg, 400);
   }
 
-  for (const repoName of reposToCheck) {
-    try {
-      await enforceRepositoryPermission(repoName, user);
-    } catch (_e) {
-      const e = _e as {statusMessage: string; statusCode: number};
-      return respondWithError(res, e.statusMessage, e.statusCode);
-    }
-  }
-
+  console.info('latest repo ', latest.permsRepo ?? latest.repository);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const repo = repoToGithub(latest.permsRepo ?? latest.repository);
+
+  // make sure publish user has permission to publish the package
+  // get the github repository from packument
+  if (!repo) {
+    console.info(
+      'failed to find repository in latest.repository or latest.permsRepo field.'
+    );
+    const msg =
+      'In order to publish through wombat the latest version on npm must have a repository pointing to github';
+    return respondWithError(res, msg, 400);
+  }
+
+  let repoResp = null;
+  try {
+    repoResp = await github.getRepo(repo.name, user.token);
+  } catch (e) {
+    console.info('failed to get repo response for ' + repo.name + ' ' + e);
+    const msg = `repository ${repo.url} doesn't exist or ${user.name} doesn't have access.`;
+    return respondWithError(res, msg, 400);
+  }
+
+  if (!repoResp) {
+    const msg = `in order to publish the latest version must have a repository ${user.name} can't see it`;
+    return respondWithError(res, msg, 400);
+  }
+
+  console.info('repo response!', repoResp.permissions);
+
+  if (!(repoResp.permissions.push || repoResp.permissions.admin)) {
+    const msg = `${user.name} cannot push repo ${repo.url}. push permission required to publish.`;
+    return respondWithError(res, msg, 400);
+  }
 
   // If the publication key has been configured with GitHub releases as a
   // second factor of authentication, we verify that the version being published
   // in the new packument aligns with the latest release created on GitHub:
-  if (pubKey.releaseAs2FA && repo) {
+  if (pubKey.releaseAs2FA) {
     console.info('token uses releases as 2FA');
     drainedBody = drainedBody || (await drainRequest(req));
     try {
@@ -242,26 +225,6 @@ writePackage.pipeToNpm = (
     });
   });
 };
-
-/*
- * Throws an exception if the user does not have "push" permission
- * to the repository.
- */
-async function enforceRepositoryPermission(repoName: string, user: User) {
-  let repoResp = null;
-  repoResp = await github.getRepo(repoName, user.token);
-
-  if (!repoResp) {
-    const msg = `in order to publish the latest version must have a repository ${user.name} can't see it`;
-    throw new WombatServerError(msg, 400);
-  }
-  console.info(repoName, ': response!', repoResp.permissions);
-
-  if (!(repoResp.permissions.push || repoResp.permissions.admin)) {
-    const msg = `${user.name} cannot push repo https://github.com/${repoName}. push permission required to publish.`;
-    throw new WombatServerError(msg, 400);
-  }
-}
 
 /*
  * Throws an exception if a matching GitHub release cannot be found for the
