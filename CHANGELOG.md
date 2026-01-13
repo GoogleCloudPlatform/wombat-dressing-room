@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented here.
 
+## [2.1.1](https://github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v2.1.0...v2.1.1) (2026-01-13)
+
+
+### Bug Fixes
+
+* **build:** run on GAE nodejs20 runtime ([989ae22](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/989ae2222eb5c19f55a4422441fc9eea092794de))
+* **deps:** update dependency @types/jest to v29 ([#175](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/175)) ([5713881](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/57138817bab6e5e59d2d4339a5f77193ebd05a26))
+* **deps:** update dependency @types/node to v18 ([#181](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/181)) ([4818e3c](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/4818e3c264a435fac8d744e320709990ea32a467))
+* **deps:** update dependency uuid to v9 ([#191](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/191)) ([148f159](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/148f15975d8339d7bd13a443c797e3d76b91d280))
+* **deps:** update dependency validate-npm-package-name to v5 ([#192](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/192)) ([b562541](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/b562541d827f64ca186e064719bd4133daaf9bad))
+* diagnosing the problem of the missing release tag ([#265](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/265)) ([b2f8c45](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/b2f8c4532dc41d01ab9a26b7d52e920e0fe83e53))
+* do not rely on the latest tag in incoming packument ([#300](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/300)) ([bb8174d](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/bb8174dcb5776ec29098caee2484210214bd5693))
+* return no logged in user when the publish key provided to whoami is expired ([#293](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/293)) ([9023b15](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/9023b1560c3834c701bdba26c8ccebfecbab9f15))
+* validate incoming package.json's repository field ([#295](https://github.com/GoogleCloudPlatform/wombat-dressing-room/issues/295)) ([3d51292](https://github.com/GoogleCloudPlatform/wombat-dressing-room/commit/3d51292e633b81ea6067d12b55b6ad4f71e924d0))
+
 ## [2.1.0](https://github.com/GoogleCloudPlatform/wombat-dressing-room/compare/v2.0.0...v2.1.0) (2022-07-06)
 
 
