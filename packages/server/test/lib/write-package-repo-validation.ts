@@ -263,11 +263,74 @@ describe('writePackage repository validation', () => {
       .reply(200, {permissions: {push: true}});
 
     const ret = await writePackage('@soldair/foo', req, res);
+
+    expect(ret.error).to.be.undefined;
+    expect(ret.statusCode).to.equal(200);
+
+    npmRequest.done();
+    githubRequestA.done();
+    githubRequestB.done();
+  });
+
+  it('successfully updates if dist-tags has NO latest or next (e.g., npm publish --no-tag)', async () => {
+    writePackage.datastore = Object.assign({}, datastore, {
+      getPublishKey: async (): Promise<PublishKey | false> => {
+        return {
+          username: 'suztomo',
+          created: 1578630249529,
+          value: 'deadbeef',
+        };
+      },
+      getUser: async (): Promise<false | User> => {
+        return {name: 'suztomo', token: 'deadbeef'};
+      },
+    });
+
+    writePackage.pipeToNpm = (
+      req: Request,
+      res: Response,
+      drainedBody: false | Buffer,
+      newPackage: boolean
+    ): Promise<WriteResponse> => {
+      return Promise.resolve({statusCode: 200, newPackage});
+    };
+
+    // Incoming request has repo B, but NO latest/next tag. It has "false" tag.
+    const req = writePackageRequest(
+      {authorization: 'token: abc123'},
+      createPackument('@soldair/foo', 'false')
+        .addVersion('1.1.0', 'https://github.com/foo/repo-B')
+        .packument()
+    );
+    const res = mockResponse();
+
+    // Registry version has repo A
+    const npmRequest = nock('https://registry.npmjs.org')
+      .get('/@soldair%2ffoo')
+      .reply(
+        200,
+        createPackument('@soldair/foo')
+          .addVersion('1.0.0', 'https://github.com/foo/repo-A')
+          .packument()
+      );
+
+    const githubRequestA = nock('https://api.github.com')
+      .get('/repos/foo/repo-A')
+      .reply(200, {permissions: {push: true}});
+
+    const githubRequestB = nock('https://api.github.com')
+      .get('/repos/foo/repo-B')
+      .reply(200, {permissions: {push: true}});
+
+    const ret = await writePackage('@soldair/foo', req, res);
+
+    expect(ret.error).to.be.undefined;
+    expect(ret.statusCode).to.equal(200);
+
     npmRequest.done();
     githubRequestA.done();
     githubRequestB.done();
 
-    expect(ret.statusCode).to.equal(200);
-    expect(ret.error).to.be.undefined;
+    nock.cleanAll();
   });
 });
