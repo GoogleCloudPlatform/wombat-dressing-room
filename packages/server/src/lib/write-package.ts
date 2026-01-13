@@ -164,8 +164,9 @@ export const writePackage = async (
   addRepo(latest);
 
   drainedBody = drainedBody || (await drainRequest(req));
+  const drainedBodyString = drainedBody + '';
   try {
-    const incomingDoc = JSON.parse(drainedBody + '') as Packument;
+    const incomingDoc = JSON.parse(drainedBodyString) as Packument;
 
     // The document in the "npm publish" request body only has one
     // key-value entry in the "versions" field.
@@ -177,9 +178,10 @@ export const writePackage = async (
         !incomingLatest ||
         (!incomingLatest.repository && !incomingLatest.permsRepo)
       ) {
+        // drainedBodyString includes the tarball attachemnt. Don't print all.
         console.info(
           'incoming package.json is missing repository (or permsRepo) field',
-          incomingDoc
+          drainedBodyString.slice(0, 1000)
         );
         const msg =
           'in order to publish, the package.json must have a repository (or permsRepo) field.';
@@ -188,9 +190,10 @@ export const writePackage = async (
       addRepo(incomingLatest);
     }
   } catch (e) {
+    // drainedBodyString includes the tarball attachemnt. Don't print all.
     console.info(
       'got ' + e + ' parsing publish. The request body:',
-      drainedBody
+      drainedBodyString.slice(0, 1000)
     );
     const msg = 'malformed json package document in the request';
     return respondWithError(res, msg, 400);
@@ -199,10 +202,11 @@ export const writePackage = async (
   if (reposToCheck.size === 0) {
     // For operations that are outside package publications, reposToCheck
     // has only one item (the latest from NPM).
+    // drainedBodyString includes the tarball attachemnt. Don't print all.
     console.info(
       'missing repositories to check for ' + packageName,
       'The request body:',
-      drainedBody
+      drainedBodyString.slice(0, 1000)
     );
     const msg =
       'in order to publish the latest version must have package.json with a repository.';
