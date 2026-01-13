@@ -26,7 +26,7 @@
     "@types/chai": "^4.2.7",
     "@types/cookie-session": "^2.0.36",
     "@types/express": "^4.16.0",
-    "@types/express-handlebars": "^5.0.0",
+    "@types/express-handlebars": "^6.0.0",
     "@types/github-url-from-git": "^1.5.0",
     "@types/is-uuid": "^1.0.0",
     "@types/mocha": "^10.0.0",
