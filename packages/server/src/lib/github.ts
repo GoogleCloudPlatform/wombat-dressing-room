@@ -129,8 +129,8 @@ const getReleaseForTags = async (
 };
 
 /**
- * Calls GitHub's API to list tags for a repository.
- * https://docs.github.com/en/rest/repos/repos#list-repository-tags
+ * Calls GitHub's API to check if a specific tag exists.
+ * https://docs.github.com/en/rest/git/refs?apiVersion=2022-11-28#get-a-reference
  * @param name repository name including username. ex: node/node or bcoe/yargs
  * @param token
  * @param matchingTags list of possible tag names to fetch. The first one to match will be returned.
@@ -143,42 +143,35 @@ const getMatchingTags = async (
   matchingTags: string[]
 ): Promise<string | undefined> => {
   const client = gh.client(token, clientOptions);
-  // We check up to 1100 of the most recent tags for a match,
-  // using a large page size to allow for monorepos with 100s of tags:
-  const maxPagination = 12;
-  for (let page = 1; page < maxPagination; page++) {
-    console.info(
-      `Quering /repos/${name}/tags with 100 per page and page: ${page}`
-    );
-    const tags: [{name: string}] = await new Promise((resolve, reject) => {
-      client.get(
-        `/repos/${name}/tags`,
-        {per_page: 100, page: page},
-        (err: Error, code: number, resp: [{name: string}]) => {
-          if (err) {
-            return reject(
-              Error(
-                `getMatchingTags: tags = ${matchingTags.toString()}, err = ${err}`
-              )
-            );
-          } else if (code !== 200) {
-            return reject(
-              new Error(
-                `getRelease: unexpected http code = ${code} tag = ${matchingTags.toString()}`
-              )
-            );
-          } else {
-            resolve(resp);
+  for (const tag of matchingTags) {
+    // GitHub's API is lenient with special characters like '@' and '/' in the
+    // tag name and handles them correctly even if they are not URL encoded.
+    const apiPath = `/repos/${name}/git/refs/tags/${tag}`;
+    const exists = await new Promise<boolean>((resolve, reject) => {
+      client.get(apiPath, (err: {statusCode: number}, code: number) => {
+        if (err) {
+          if (err.statusCode === 404) {
+            return resolve(false);
           }
+          return reject(
+            Error(
+              `getMatchingTags: tag = ${tag}, statusCode = ${err.statusCode}, err = ${err}`
+            )
+          );
         }
-      );
+        if (code !== 200) {
+          return reject(
+            Error(
+              `getMatchingTags: tag = ${tag}, unexpected http code = ${code}`
+            )
+          );
+        }
+        resolve(true);
+      });
     });
-    for (const item of tags) {
-      for (const tag of matchingTags) {
-        if (item.name === tag) {
-          return tag;
-        }
-      }
+    if (exists) {
+      console.info(`Found matching tag: ${tag}`);
+      return tag;
     }
   }
   console.info('No matching tags found.');

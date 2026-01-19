@@ -65,8 +65,8 @@ describe('github', () => {
       const request = nock('https://api.github.com')
         .get('/repos/bcoe/test/releases/tags/v1.0.2')
         .replyWithError({statusCode: 404})
-        .get('/repos/bcoe/test/tags?per_page=100&page=1')
-        .reply(200, [{name: 'v1.0.2'}]);
+        .get('/repos/bcoe/test/git/refs/tags/v1.0.2')
+        .reply(200, {ref: 'refs/tags/v1.0.2'});
 
       const latest = await github.getRelease('bcoe/test', 'abc123', ['v1.0.2']);
       expect(latest).to.equal('v1.0.2');
@@ -77,8 +77,8 @@ describe('github', () => {
       const request = nock('https://api.github.com')
         .get('/repos/bcoe/test/releases/tags/v1.0.2')
         .replyWithError({statusCode: 500})
-        .get('/repos/bcoe/test/tags?per_page=100&page=1')
-        .reply(200, [{name: 'v1.0.2'}]);
+        .get('/repos/bcoe/test/git/refs/tags/v1.0.2')
+        .reply(200, {ref: 'refs/tags/v1.0.2'});
 
       const latest = await github.getRelease('bcoe/test', 'abc123', ['v1.0.2']);
       expect(latest).to.equal('v1.0.2');
@@ -89,8 +89,8 @@ describe('github', () => {
       const request = nock('https://api.github.com')
         .get('/repos/bcoe/test/releases/tags/v1.0.2')
         .replyWithError({statusCode: 404})
-        .get('/repos/bcoe/test/tags?per_page=100&page=1')
-        .reply(404);
+        .get('/repos/bcoe/test/git/refs/tags/v1.0.2')
+        .reply(401);
       let err: Error | undefined = undefined;
       try {
         await github.getRelease('bcoe/test', 'abc123', ['v1.0.2']);
@@ -99,7 +99,7 @@ describe('github', () => {
       }
       expect(err).to.not.equal(undefined);
       if (err) {
-        expect(err.message).to.include('unexpected http code');
+        expect(err.message).to.include('unexpected http code = 401');
       }
       request.done();
     });
@@ -110,28 +110,10 @@ describe('github', () => {
         .replyWithError({statusCode: 404})
         .get('/repos/bcoe/test/releases/tags/@scope/foo@1.0.2')
         .replyWithError({statusCode: 404})
-        .get('/repos/bcoe/test/tags?per_page=100&page=1')
-        .reply(200, [{name: 'v1.0.2'}])
-        .get('/repos/bcoe/test/tags?per_page=100&page=2')
-        .reply(200, [{name: 'v1.0.3'}])
-        .get('/repos/bcoe/test/tags?per_page=100&page=3')
-        .reply(200, [{name: 'v1.0.4'}])
-        .get('/repos/bcoe/test/tags?per_page=100&page=4')
-        .reply(200, [{name: 'v1.0.5'}])
-        .get('/repos/bcoe/test/tags?per_page=100&page=5')
-        .reply(200, [{name: 'v1.0.6'}])
-        .get('/repos/bcoe/test/tags?per_page=100&page=6')
-        .reply(200, [{name: 'v1.0.7'}])
-        .get('/repos/bcoe/test/tags?per_page=100&page=7')
-        .reply(200, [{name: 'v1.0.8'}])
-        .get('/repos/bcoe/test/tags?per_page=100&page=8')
-        .reply(200, [{name: 'v1.0.9'}])
-        .get('/repos/bcoe/test/tags?per_page=100&page=9')
-        .reply(200, [{name: 'v1.0.10'}])
-        .get('/repos/bcoe/test/tags?per_page=100&page=10')
-        .reply(200, [{name: 'v1.0.10'}])
-        .get('/repos/bcoe/test/tags?per_page=100&page=11')
-        .reply(200, [{name: 'v1.0.10'}]);
+        .get('/repos/bcoe/test/git/refs/tags/foo-v1.0.2')
+        .replyWithError({statusCode: 404})
+        .get('/repos/bcoe/test/git/refs/tags/@scope/foo@1.0.2')
+        .replyWithError({statusCode: 404});
 
       expect(
         await github.getRelease('bcoe/test', 'abc123', [
@@ -146,12 +128,8 @@ describe('github', () => {
       const request = nock('https://api.github.com')
         .get('/repos/bcoe/test/releases/tags/foo-v1.0.2')
         .replyWithError({statusCode: 404})
-        .get('/repos/bcoe/test/tags?per_page=100&page=1')
-        .reply(200, [{name: 'v1.0.3'}])
-        .get('/repos/bcoe/test/tags?per_page=100&page=2')
-        .reply(200, [{name: 'v1.0.4'}])
-        .get('/repos/bcoe/test/tags?per_page=100&page=3')
-        .reply(200, [{name: 'foo-v1.0.2'}]);
+        .get('/repos/bcoe/test/git/refs/tags/foo-v1.0.2')
+        .reply(200, {ref: 'refs/tags/foo-v1.0.2'});
 
       const latest = await github.getRelease('bcoe/test', 'abc123', [
         'foo-v1.0.2',
@@ -164,12 +142,8 @@ describe('github', () => {
       const request = nock('https://api.github.com')
         .get('/repos/bcoe/test/releases/tags/@scope/foo@1.0.2')
         .replyWithError({statusCode: 404})
-        .get('/repos/bcoe/test/tags?per_page=100&page=1')
-        .reply(200, [{name: 'v1.0.3'}])
-        .get('/repos/bcoe/test/tags?per_page=100&page=2')
-        .reply(200, [{name: 'v1.0.4'}])
-        .get('/repos/bcoe/test/tags?per_page=100&page=3')
-        .reply(200, [{name: '@scope/foo@1.0.2'}]);
+        .get('/repos/bcoe/test/git/refs/tags/@scope/foo@1.0.2')
+        .reply(200, {ref: 'refs/tags/@scope/foo@1.0.2'});
 
       const latest = await github.getRelease('bcoe/test', 'abc123', [
         '@scope/foo@1.0.2',

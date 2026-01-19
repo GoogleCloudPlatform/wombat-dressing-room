@@ -136,8 +136,8 @@ describe('writePackage', () => {
         .get('/repos/foo/bar/releases/tags/v1.0.0')
         .replyWithError({statusCode: 404})
         // most recent release tag on GitHub is v1.0.0
-        .get('/repos/foo/bar/tags?per_page=100&page=1')
-        .reply(200, [{name: 'v1.0.0'}]);
+        .get('/repos/foo/bar/git/refs/tags/v1.0.0')
+        .reply(200, {ref: 'refs/tags/v1.0.0'});
 
       const ret = await writePackage('@soldair/foo', req, res);
       npmRequest.done();
@@ -253,8 +253,8 @@ describe('writePackage', () => {
         .get('/repos/foo/bar/releases/tags/v1.0.0')
         .replyWithError({statusCode: 404})
         // most recent tag on GitHub is v1.0.0
-        .get('/repos/foo/bar/tags?per_page=100&page=1')
-        .reply(200, [{name: 'v1.0.0'}]);
+        .get('/repos/foo/bar/git/refs/tags/v1.0.0')
+        .reply(200, {ref: 'refs/tags/v1.0.0'});
 
       const ret = await writePackage('@soldair/foo', req, res);
       npmRequest.done();
@@ -369,28 +369,8 @@ describe('writePackage', () => {
         .get('/repos/foo/bar/releases/tags/v1.0.0')
         .replyWithError({statusCode: 404})
         // most recent release tag on GitHub is v0.1.0
-        .get('/repos/foo/bar/tags?per_page=100&page=1')
-        .reply(200, [{name: 'v0.1.0'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=2')
-        .reply(200, [{name: 'v0.1.0'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=3')
-        .reply(200, [{name: 'v0.1.0'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=4')
-        .reply(200, [{name: 'v0.1.0'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=5')
-        .reply(200, [{name: 'v0.1.0'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=6')
-        .reply(200, [{name: 'v0.1.0'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=7')
-        .reply(200, [{name: 'v0.1.0'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=8')
-        .reply(200, [{name: 'v0.1.0'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=9')
-        .reply(200, [{name: 'v0.1.0'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=10')
-        .reply(200, [{name: 'v0.1.0'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=11')
-        .reply(200, [{name: 'v0.1.0'}]);
+        .get('/repos/foo/bar/git/refs/tags/v1.0.0')
+        .replyWithError({statusCode: 404});
 
       const ret = await writePackage('@soldair/foo', req, res);
       npmRequest.done();
@@ -449,7 +429,7 @@ describe('writePackage', () => {
         .get('/repos/foo/bar/releases/tags/v1.0.0')
         .replyWithError({statusCode: 404})
         // Error while fetching tags
-        .get('/repos/foo/bar/tags?per_page=100&page=1')
+        .get('/repos/foo/bar/git/refs/tags/v1.0.0')
         .reply(500);
 
       const ret = await writePackage('@soldair/foo', req, res);
@@ -630,8 +610,8 @@ describe('writePackage', () => {
         .get('/repos/foo/bar/releases/tags/@soldair/foo@1.0.0')
         .replyWithError({statusCode: 404})
         // But there is a matching tag for v1.0.0
-        .get('/repos/foo/bar/tags?per_page=100&page=1')
-        .reply(200, [{name: 'foo-v1.0.0'}]);
+        .get('/repos/foo/bar/git/refs/tags/foo-v1.0.0')
+        .reply(200, {ref: 'refs/tags/foo-v1.0.0'});
 
       const ret = await writePackage('@soldair/foo', req, res);
       npmRequest.done();
@@ -693,8 +673,10 @@ describe('writePackage', () => {
         .get('/repos/foo/bar/releases/tags/@soldair/foo@1.0.0')
         .replyWithError({statusCode: 404})
         // most recent release tag on GitHub is v1.0.0
-        .get('/repos/foo/bar/tags?per_page=100&page=1')
-        .reply(200, [{name: '@soldair/foo@1.0.0'}]);
+        .get('/repos/foo/bar/git/refs/tags/foo-v1.0.0')
+        .replyWithError({statusCode: 404})
+        .get('/repos/foo/bar/git/refs/tags/@soldair/foo@1.0.0')
+        .reply(200, {ref: 'refs/tags/@soldair/foo@1.0.0'});
 
       const ret = await writePackage('@soldair/foo', req, res);
       npmRequest.done();
@@ -756,28 +738,10 @@ describe('writePackage', () => {
         .get('/repos/foo/bar/releases/tags/@soldair/foo@1.0.0')
         .replyWithError({statusCode: 404})
         // This is monorepo-style token but the tags on GH are not monorepo-style
-        .get('/repos/foo/bar/tags?per_page=100&page=1')
-        .reply(200, [{name: 'v1.0.0'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=2')
-        .reply(200, [{name: 'v1.0.3'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=3')
-        .reply(200, [{name: 'v1.0.4'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=4')
-        .reply(200, [{name: 'v1.0.5'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=5')
-        .reply(200, [{name: 'v1.0.6'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=6')
-        .reply(200, [{name: 'v1.0.7'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=7')
-        .reply(200, [{name: 'v1.0.8'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=8')
-        .reply(200, [{name: 'v1.0.9'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=9')
-        .reply(200, [{name: 'v1.0.10'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=10')
-        .reply(200, [{name: 'v1.0.10'}])
-        .get('/repos/foo/bar/tags?per_page=100&page=11')
-        .reply(200, [{name: 'v1.0.10'}]);
+        .get('/repos/foo/bar/git/refs/tags/foo-v1.0.0')
+        .replyWithError({statusCode: 404})
+        .get('/repos/foo/bar/git/refs/tags/@soldair/foo@1.0.0')
+        .replyWithError({statusCode: 404});
 
       const ret = await writePackage('@soldair/foo', req, res);
       npmRequest.done();
