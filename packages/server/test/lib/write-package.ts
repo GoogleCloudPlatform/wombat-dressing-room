@@ -40,6 +40,15 @@ function mockResponse() {
 }
 
 describe('writePackage', () => {
+  const originalDatastore = writePackage.datastore;
+  const originalPipeToNpm = writePackage.pipeToNpm;
+
+  afterEach(() => {
+    writePackage.datastore = originalDatastore;
+    writePackage.pipeToNpm = originalPipeToNpm;
+    nock.cleanAll();
+  });
+
   it('responds with 401 if publication key not found in datastore', async () => {
     writePackage.datastore = Object.assign({}, datastore, {
       getPublishKey: async (): Promise<PublishKey | false> => {
@@ -86,6 +95,55 @@ describe('writePackage', () => {
     npmRequest.done();
     expect(ret.error).to.match(/package.json must have a repository/);
     expect(ret.statusCode).to.equal(400);
+  });
+
+  it('does not crash when body is a string (e.g., from npm dist-tag rm)', async () => {
+    writePackage.datastore = Object.assign({}, datastore, {
+      getPublishKey: async (): Promise<PublishKey | false> => {
+        return {
+          username: 'bcoe',
+          created: 1578630249529,
+          value: 'deadbeef',
+        };
+      },
+      getUser: async (): Promise<false | User> => {
+        return {name: 'bcoe', token: 'deadbeef'};
+      },
+    });
+
+    writePackage.pipeToNpm = (
+      req: Request,
+      res: Response,
+      drainedBody: false | Buffer,
+      newPackage: boolean
+    ): Promise<WriteResponse> => {
+      return Promise.resolve({statusCode: 200, newPackage});
+    };
+
+    // Simulate a body that is just a JSON string "0.24.3"
+    // This is what happens during some npm commands like dist-tag
+    const req = writePackageRequest({authorization: 'token: abc123'}, '0.24.3');
+    const res = mockResponse();
+
+    // Mock existing package with repository info
+    const npmRequest = nock('https://registry.npmjs.org')
+      .get('/@soldair%2ffoo')
+      .reply(
+        200,
+        createPackument('@soldair/foo')
+          .addVersion('1.0.0', 'https://github.com/foo/bar')
+          .packument()
+      );
+
+    // Mock github permission check
+    const githubRequest = nock('https://api.github.com')
+      .get('/repos/foo/bar')
+      .reply(200, {permissions: {push: true}});
+
+    const ret = await writePackage('@soldair/foo', req, res);
+    npmRequest.done();
+    githubRequest.done();
+    expect(ret.statusCode).to.equal(200);
   });
 
   describe('releaseAs2FA', () => {
