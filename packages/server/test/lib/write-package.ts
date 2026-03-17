@@ -18,13 +18,12 @@ import {expect} from 'chai';
 import {Request, Response} from 'express';
 import * as nock from 'nock';
 import {describe, it} from 'mocha';
+import * as sinon from 'sinon';
 
 import {createPackument} from '../helpers/create-packument';
 import {writePackageRequest} from '../helpers/write-package-request';
 
-import * as datastore from '../../src/lib/datastore';
-import {PublishKey, User} from '../../src/lib/datastore';
-import {writePackage, WriteResponse} from '../../src/lib/write-package';
+import {writePackage} from '../../src/lib/write-package';
 
 nock.disableNetConnect();
 
@@ -40,21 +39,13 @@ function mockResponse() {
 }
 
 describe('writePackage', () => {
-  const originalDatastore = writePackage.datastore;
-  const originalPipeToNpm = writePackage.pipeToNpm;
-
   afterEach(() => {
-    writePackage.datastore = originalDatastore;
-    writePackage.pipeToNpm = originalPipeToNpm;
+    sinon.restore();
     nock.cleanAll();
   });
 
   it('responds with 401 if publication key not found in datastore', async () => {
-    writePackage.datastore = Object.assign({}, datastore, {
-      getPublishKey: async (): Promise<PublishKey | false> => {
-        return false;
-      },
-    });
+    sinon.stub(writePackage.datastore, 'getPublishKey').resolves(false);
     const req = {headers: {authorization: 'token: abc123'}} as Request;
     const res = mockResponse();
     const ret = await writePackage('@soldair/foo', req, res);
@@ -64,18 +55,15 @@ describe('writePackage', () => {
 
   it('responds with 400 if packument has no repository field', async () => {
     // Fake that there's a releaseAs2FA key in datastore:
-    writePackage.datastore = Object.assign({}, datastore, {
-      getPublishKey: async (): Promise<PublishKey | false> => {
-        return {
-          username: 'bcoe',
-          created: 1578630249529,
-          value: 'deadbeef',
-          releaseAs2FA: true,
-        };
-      },
-      getUser: async (): Promise<false | User> => {
-        return {name: 'bcoe', token: 'deadbeef'};
-      },
+    sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+      username: 'bcoe',
+      created: 1578630249529,
+      value: 'deadbeef',
+      releaseAs2FA: true,
+    });
+    sinon.stub(writePackage.datastore, 'getUser').resolves({
+      name: 'bcoe',
+      token: 'deadbeef',
     });
 
     // Simulate a publication request to the proxy:
@@ -98,27 +86,21 @@ describe('writePackage', () => {
   });
 
   it('does not crash when body is a string (e.g., from npm dist-tag rm)', async () => {
-    writePackage.datastore = Object.assign({}, datastore, {
-      getPublishKey: async (): Promise<PublishKey | false> => {
-        return {
-          username: 'bcoe',
-          created: 1578630249529,
-          value: 'deadbeef',
-        };
-      },
-      getUser: async (): Promise<false | User> => {
-        return {name: 'bcoe', token: 'deadbeef'};
-      },
+    sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+      username: 'bcoe',
+      created: 1578630249529,
+      value: 'deadbeef',
+    });
+    sinon.stub(writePackage.datastore, 'getUser').resolves({
+      name: 'bcoe',
+      token: 'deadbeef',
     });
 
-    writePackage.pipeToNpm = (
-      req: Request,
-      res: Response,
-      drainedBody: false | Buffer,
-      newPackage: boolean
-    ): Promise<WriteResponse> => {
-      return Promise.resolve({statusCode: 200, newPackage});
-    };
+    sinon
+      .stub(writePackage, 'pipeToNpm')
+      .callsFake((_req, _res, _body, newPackage) => {
+        return Promise.resolve({statusCode: 200, newPackage});
+      });
 
     // Simulate a body that is just a JSON string "0.24.3"
     // This is what happens during some npm commands like dist-tag
@@ -149,27 +131,21 @@ describe('writePackage', () => {
   describe('releaseAs2FA', () => {
     it('appropriately routes initial package publication', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
-      writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (): Promise<PublishKey | false> => {
-          return {
-            username: 'bcoe',
-            created: 1578630249529,
-            value: 'deadbeef',
-            releaseAs2FA: true,
-          };
-        },
-        getUser: async (): Promise<false | User> => {
-          return {name: 'bcoe', token: 'deadbeef'};
-        },
+      sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+        username: 'bcoe',
+        created: 1578630249529,
+        value: 'deadbeef',
+        releaseAs2FA: true,
       });
-      writePackage.pipeToNpm = (
-        req: Request,
-        res: Response,
-        drainedBody: false | Buffer,
-        newPackage: boolean
-      ): Promise<WriteResponse> => {
-        return Promise.resolve({statusCode: 200, newPackage});
-      };
+      sinon.stub(writePackage.datastore, 'getUser').resolves({
+        name: 'bcoe',
+        token: 'deadbeef',
+      });
+      sinon
+        .stub(writePackage, 'pipeToNpm')
+        .callsFake((_req, _res, _body, newPackage) => {
+          return Promise.resolve({statusCode: 200, newPackage});
+        });
 
       // Simulate a publication request to the proxy:
       const req = writePackageRequest(
@@ -206,27 +182,21 @@ describe('writePackage', () => {
 
     it('allows a package to be updated', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
-      writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (): Promise<PublishKey | false> => {
-          return {
-            username: 'bcoe',
-            created: 1578630249529,
-            value: 'deadbeef',
-            releaseAs2FA: true,
-          };
-        },
-        getUser: async (): Promise<false | User> => {
-          return {name: 'bcoe', token: 'deadbeef'};
-        },
+      sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+        username: 'bcoe',
+        created: 1578630249529,
+        value: 'deadbeef',
+        releaseAs2FA: true,
       });
-      writePackage.pipeToNpm = (
-        req: Request,
-        res: Response,
-        drainedBody: false | Buffer,
-        newPackage: boolean
-      ): Promise<WriteResponse> => {
-        return Promise.resolve({statusCode: 200, newPackage});
-      };
+      sinon.stub(writePackage.datastore, 'getUser').resolves({
+        name: 'bcoe',
+        token: 'deadbeef',
+      });
+      sinon
+        .stub(writePackage, 'pipeToNpm')
+        .callsFake((_req, _res, _body, newPackage) => {
+          return Promise.resolve({statusCode: 200, newPackage});
+        });
 
       // Simulate a publication request to the proxy:
       const req = writePackageRequest(
@@ -263,27 +233,21 @@ describe('writePackage', () => {
 
     it('supports publication to next tag', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
-      writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (): Promise<PublishKey | false> => {
-          return {
-            username: 'bcoe',
-            created: 1578630249529,
-            value: 'deadbeef',
-            releaseAs2FA: true,
-          };
-        },
-        getUser: async (): Promise<false | User> => {
-          return {name: 'bcoe', token: 'deadbeef'};
-        },
+      sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+        username: 'bcoe',
+        created: 1578630249529,
+        value: 'deadbeef',
+        releaseAs2FA: true,
       });
-      writePackage.pipeToNpm = (
-        req: Request,
-        res: Response,
-        drainedBody: false | Buffer,
-        newPackage: boolean
-      ): Promise<WriteResponse> => {
-        return Promise.resolve({statusCode: 200, newPackage});
-      };
+      sinon.stub(writePackage.datastore, 'getUser').resolves({
+        name: 'bcoe',
+        token: 'deadbeef',
+      });
+      sinon
+        .stub(writePackage, 'pipeToNpm')
+        .callsFake((_req, _res, _body, newPackage) => {
+          return Promise.resolve({statusCode: 200, newPackage});
+        });
 
       // Simulate a publication request to the proxy:
       const req = writePackageRequest(
@@ -323,27 +287,21 @@ describe('writePackage', () => {
 
     it("does not allow PUTs that aren't publications, e.g., dist-tag updates", async () => {
       // Fake that there's a releaseAs2FA key in datastore:
-      writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (): Promise<PublishKey | false> => {
-          return {
-            username: 'bcoe',
-            created: 1578630249529,
-            value: 'deadbeef',
-            releaseAs2FA: true,
-          };
-        },
-        getUser: async (): Promise<false | User> => {
-          return {name: 'bcoe', token: 'deadbeef'};
-        },
+      sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+        username: 'bcoe',
+        created: 1578630249529,
+        value: 'deadbeef',
+        releaseAs2FA: true,
       });
-      writePackage.pipeToNpm = (
-        req: Request,
-        res: Response,
-        drainedBody: false | Buffer,
-        newPackage: boolean
-      ): Promise<WriteResponse> => {
-        return Promise.resolve({statusCode: 200, newPackage});
-      };
+      sinon.stub(writePackage.datastore, 'getUser').resolves({
+        name: 'bcoe',
+        token: 'deadbeef',
+      });
+      sinon
+        .stub(writePackage, 'pipeToNpm')
+        .callsFake((_req, _res, _body, newPackage) => {
+          return Promise.resolve({statusCode: 200, newPackage});
+        });
 
       // simulate a dist-tag update:
       const req = writePackageRequest(
@@ -379,27 +337,21 @@ describe('writePackage', () => {
 
     it('rejects publication if no corresponding release or tags found on GitHub', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
-      writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (): Promise<PublishKey | false> => {
-          return {
-            username: 'bcoe',
-            created: 1578630249529,
-            value: 'deadbeef',
-            releaseAs2FA: true,
-          };
-        },
-        getUser: async (): Promise<false | User> => {
-          return {name: 'bcoe', token: 'deadbeef'};
-        },
+      sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+        username: 'bcoe',
+        created: 1578630249529,
+        value: 'deadbeef',
+        releaseAs2FA: true,
       });
-      writePackage.pipeToNpm = (
-        req: Request,
-        res: Response,
-        drainedBody: false | Buffer,
-        newPackage: boolean
-      ): Promise<WriteResponse> => {
-        return Promise.resolve({statusCode: 200, newPackage});
-      };
+      sinon.stub(writePackage.datastore, 'getUser').resolves({
+        name: 'bcoe',
+        token: 'deadbeef',
+      });
+      sinon
+        .stub(writePackage, 'pipeToNpm')
+        .callsFake((_req, _res, _body, newPackage) => {
+          return Promise.resolve({statusCode: 200, newPackage});
+        });
 
       // Simulate a publication request to the proxy:
       const req = writePackageRequest(
@@ -459,27 +411,21 @@ describe('writePackage', () => {
 
     it('rejects publication if listing tags returns non-200', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
-      writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (): Promise<PublishKey | false> => {
-          return {
-            username: 'bcoe',
-            created: 1578630249529,
-            value: 'deadbeef',
-            releaseAs2FA: true,
-          };
-        },
-        getUser: async (): Promise<false | User> => {
-          return {name: 'bcoe', token: 'deadbeef'};
-        },
+      sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+        username: 'bcoe',
+        created: 1578630249529,
+        value: 'deadbeef',
+        releaseAs2FA: true,
       });
-      writePackage.pipeToNpm = (
-        req: Request,
-        res: Response,
-        drainedBody: false | Buffer,
-        newPackage: boolean
-      ): Promise<WriteResponse> => {
-        return Promise.resolve({statusCode: 200, newPackage});
-      };
+      sinon.stub(writePackage.datastore, 'getUser').resolves({
+        name: 'bcoe',
+        token: 'deadbeef',
+      });
+      sinon
+        .stub(writePackage, 'pipeToNpm')
+        .callsFake((_req, _res, _body, newPackage) => {
+          return Promise.resolve({statusCode: 200, newPackage});
+        });
 
       // Simulate a publication request to the proxy:
       const req = writePackageRequest(
@@ -519,28 +465,22 @@ describe('writePackage', () => {
 
     it('allows package with monorepo token to be updated based on matching release', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
-      writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (): Promise<PublishKey | false> => {
-          return {
-            username: 'bcoe',
-            created: 1578630249529,
-            value: 'deadbeef',
-            releaseAs2FA: true,
-            monorepo: true,
-          };
-        },
-        getUser: async (): Promise<false | User> => {
-          return {name: 'bcoe', token: 'deadbeef'};
-        },
+      sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+        username: 'bcoe',
+        created: 1578630249529,
+        value: 'deadbeef',
+        releaseAs2FA: true,
+        monorepo: true,
       });
-      writePackage.pipeToNpm = (
-        req: Request,
-        res: Response,
-        drainedBody: false | Buffer,
-        newPackage: boolean
-      ): Promise<WriteResponse> => {
-        return Promise.resolve({statusCode: 200, newPackage});
-      };
+      sinon.stub(writePackage.datastore, 'getUser').resolves({
+        name: 'bcoe',
+        token: 'deadbeef',
+      });
+      sinon
+        .stub(writePackage, 'pipeToNpm')
+        .callsFake((_req, _res, _body, newPackage) => {
+          return Promise.resolve({statusCode: 200, newPackage});
+        });
 
       // Simulate a publication request to the proxy:
       const req = writePackageRequest(
@@ -577,28 +517,22 @@ describe('writePackage', () => {
 
     it('allows package with monorepo token and lerna-style tags to be updated based on matching release', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
-      writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (): Promise<PublishKey | false> => {
-          return {
-            username: 'bcoe',
-            created: 1578630249529,
-            value: 'deadbeef',
-            releaseAs2FA: true,
-            monorepo: true,
-          };
-        },
-        getUser: async (): Promise<false | User> => {
-          return {name: 'bcoe', token: 'deadbeef'};
-        },
+      sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+        username: 'bcoe',
+        created: 1578630249529,
+        value: 'deadbeef',
+        releaseAs2FA: true,
+        monorepo: true,
       });
-      writePackage.pipeToNpm = (
-        req: Request,
-        res: Response,
-        drainedBody: false | Buffer,
-        newPackage: boolean
-      ): Promise<WriteResponse> => {
-        return Promise.resolve({statusCode: 200, newPackage});
-      };
+      sinon.stub(writePackage.datastore, 'getUser').resolves({
+        name: 'bcoe',
+        token: 'deadbeef',
+      });
+      sinon
+        .stub(writePackage, 'pipeToNpm')
+        .callsFake((_req, _res, _body, newPackage) => {
+          return Promise.resolve({statusCode: 200, newPackage});
+        });
 
       // Simulate a publication request to the proxy:
       const req = writePackageRequest(
@@ -637,28 +571,22 @@ describe('writePackage', () => {
 
     it('allows package with monorepo token to be updated based on tags but no matching release', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
-      writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (): Promise<PublishKey | false> => {
-          return {
-            username: 'bcoe',
-            created: 1578630249529,
-            value: 'deadbeef',
-            releaseAs2FA: true,
-            monorepo: true,
-          };
-        },
-        getUser: async (): Promise<false | User> => {
-          return {name: 'bcoe', token: 'deadbeef'};
-        },
+      sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+        username: 'bcoe',
+        created: 1578630249529,
+        value: 'deadbeef',
+        releaseAs2FA: true,
+        monorepo: true,
       });
-      writePackage.pipeToNpm = (
-        req: Request,
-        res: Response,
-        drainedBody: false | Buffer,
-        newPackage: boolean
-      ): Promise<WriteResponse> => {
-        return Promise.resolve({statusCode: 200, newPackage});
-      };
+      sinon.stub(writePackage.datastore, 'getUser').resolves({
+        name: 'bcoe',
+        token: 'deadbeef',
+      });
+      sinon
+        .stub(writePackage, 'pipeToNpm')
+        .callsFake((_req, _res, _body, newPackage) => {
+          return Promise.resolve({statusCode: 200, newPackage});
+        });
 
       // Simulate a publication request to the proxy:
       const req = writePackageRequest(
@@ -700,28 +628,22 @@ describe('writePackage', () => {
 
     it('allows package with monorepo token and lerna-style tags to be updated based on tags but no matching release', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
-      writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (): Promise<PublishKey | false> => {
-          return {
-            username: 'bcoe',
-            created: 1578630249529,
-            value: 'deadbeef',
-            releaseAs2FA: true,
-            monorepo: true,
-          };
-        },
-        getUser: async (): Promise<false | User> => {
-          return {name: 'bcoe', token: 'deadbeef'};
-        },
+      sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+        username: 'bcoe',
+        created: 1578630249529,
+        value: 'deadbeef',
+        releaseAs2FA: true,
+        monorepo: true,
       });
-      writePackage.pipeToNpm = (
-        req: Request,
-        res: Response,
-        drainedBody: false | Buffer,
-        newPackage: boolean
-      ): Promise<WriteResponse> => {
-        return Promise.resolve({statusCode: 200, newPackage});
-      };
+      sinon.stub(writePackage.datastore, 'getUser').resolves({
+        name: 'bcoe',
+        token: 'deadbeef',
+      });
+      sinon
+        .stub(writePackage, 'pipeToNpm')
+        .callsFake((_req, _res, _body, newPackage) => {
+          return Promise.resolve({statusCode: 200, newPackage});
+        });
 
       // Simulate a publication request to the proxy:
       const req = writePackageRequest(
@@ -763,28 +685,22 @@ describe('writePackage', () => {
 
     it('does not allow package with monorepo token to be updated if tag does not have prefix', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
-      writePackage.datastore = Object.assign({}, datastore, {
-        getPublishKey: async (): Promise<PublishKey | false> => {
-          return {
-            username: 'bcoe',
-            created: 1578630249529,
-            value: 'deadbeef',
-            releaseAs2FA: true,
-            monorepo: true,
-          };
-        },
-        getUser: async (): Promise<false | User> => {
-          return {name: 'bcoe', token: 'deadbeef'};
-        },
+      sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+        username: 'bcoe',
+        created: 1578630249529,
+        value: 'deadbeef',
+        releaseAs2FA: true,
+        monorepo: true,
       });
-      writePackage.pipeToNpm = (
-        req: Request,
-        res: Response,
-        drainedBody: false | Buffer,
-        newPackage: boolean
-      ): Promise<WriteResponse> => {
-        return Promise.resolve({statusCode: 200, newPackage});
-      };
+      sinon.stub(writePackage.datastore, 'getUser').resolves({
+        name: 'bcoe',
+        token: 'deadbeef',
+      });
+      sinon
+        .stub(writePackage, 'pipeToNpm')
+        .callsFake((_req, _res, _body, newPackage) => {
+          return Promise.resolve({statusCode: 200, newPackage});
+        });
 
       // Simulate a publication request to the proxy:
       const req = writePackageRequest(
