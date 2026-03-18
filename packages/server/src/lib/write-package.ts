@@ -164,52 +164,15 @@ export const writePackage = async (
   addRepo(latest);
 
   drainedBody = drainedBody || (await drainRequest(req));
-  const drainedBodyString = drainedBody + '';
   try {
-    const incomingDoc = JSON.parse(drainedBodyString) as Packument;
-
-    // Not all npm commands send Packument as the request body.
-    // For eaxmple, `npm dist-tag rm <packaage> false` sends
-    // a string in the request body. The logic around Packument validation
-    // should skip such cases. Note that the "as Packument" in TypeScript
-    // above is not enforced in the JavaScript runtime.
-    if (
-      incomingDoc &&
-      typeof incomingDoc === 'object' &&
-      incomingDoc.versions
-    ) {
-      // The document in the "npm publish" request body only has one
-      // key-value entry in the "versions" field.
-      // With "--no-tag" option in "npm publish", it does not have the
-      // "latest" tag in the "dist-tag" field of the document.
-      for (const incomingPackage of Object.values(incomingDoc.versions)) {
-        const incomingLatest = incomingPackage as PackumentVersionWombat;
-        if (
-          !incomingLatest ||
-          (!incomingLatest.repository && !incomingLatest.permsRepo)
-        ) {
-          // drainedBodyString includes the tarball attachemnt. Don't print all.
-          console.info(
-            'incoming package.json is missing repository (or permsRepo) field',
-            drainedBodyString.slice(0, 1000)
-          );
-          const msg =
-            'in order to publish, the package.json must have a repository (or permsRepo) field.';
-          return respondWithError(res, msg, 400);
-        }
-        addRepo(incomingLatest);
-      }
+    for (const repoName of getReposFromIncomingBody(drainedBody)) {
+      reposToCheck.add(repoName);
     }
   } catch (e) {
-    // drainedBodyString includes the tarball attachemnt. Don't print all.
-    console.info(
-      'got ' + e + ' parsing publish. The request body:',
-      drainedBodyString.slice(0, 1000)
-    );
-    // Show the stacktrace.
-    console.info(e);
-    const msg = 'malformed json package document in the request';
-    return respondWithError(res, msg, 400);
+    if (e instanceof WombatServerError) {
+      return respondWithError(res, e.message, e.statusCode);
+    }
+    throw e;
   }
 
   if (reposToCheck.size === 0) {
@@ -219,7 +182,7 @@ export const writePackage = async (
     console.info(
       'missing repositories to check for ' + packageName,
       'The request body:',
-      drainedBodyString.slice(0, 1000)
+      (drainedBody + '').slice(0, 1000)
     );
     const msg =
       'in order to publish the latest version must have package.json with a repository.';
@@ -429,3 +392,69 @@ const formatError = (message: string) => {
 };
 
 writePackage.datastore = datastore;
+
+/**
+ * Returns the repository names found in the incoming Packument body.
+ *
+ * This function parses the request body as a Packument and collects all unique
+ * repository names associated with the package versions being published.
+ *
+ * @param body - The request body as a Buffer.
+ * @returns A set of repository names.
+ * @throws WombatServerError if the Packument is malformed or missing repository fields.
+ */
+function getReposFromIncomingBody(body: Buffer): Set<string> {
+  const bodyString = body + '';
+  const repos = new Set<string>();
+  if (!bodyString) {
+    return repos;
+  }
+
+  try {
+    const doc = JSON.parse(bodyString) as Packument;
+
+    // Not all npm commands send Packument as the request body.
+    // For eaxmple, `npm dist-tag rm <packaage> false` sends
+    // a string in the request body. The logic around Packument validation
+    // should skip such cases. Note that the "as Packument" in TypeScript
+    // above is not enforced in the JavaScript runtime.
+    if (doc && typeof doc === 'object' && doc.versions) {
+      // The document in the "npm publish" request body only has one
+      // key-value entry in the "versions" field.
+      // With "--no-tag" option in "npm publish", it does not have the
+      // "latest" tag in the "dist-tag" field of the document.
+      for (const version of Object.values(doc.versions)) {
+        const v = version as PackumentVersionWombat;
+        if (!v || (!v.repository && !v.permsRepo)) {
+          // bodyString includes the tarball attachment. Don't print all.
+          console.info(
+            'incoming package.json is missing repository (or permsRepo) field',
+            bodyString.slice(0, 1000)
+          );
+          const msg =
+            'in order to publish, the package.json must have a repository (or permsRepo) field.';
+          throw new WombatServerError(msg, 400);
+        }
+        const repoInfo = repoToGithub(v.permsRepo ?? v.repository);
+        if (repoInfo) {
+          repos.add(repoInfo.name);
+        }
+      }
+    }
+  } catch (e) {
+    if (e instanceof WombatServerError) {
+      throw e;
+    }
+    // bodyString includes the tarball attachment. Don't print all.
+    console.info(
+      'got ' + e + ' parsing publish. The request body:',
+      bodyString.slice(0, 1000)
+    );
+    // Show the stacktrace.
+    console.info(e);
+    const msg = 'malformed json package document in the request';
+    throw new WombatServerError(msg, 400);
+  }
+
+  return repos;
+}

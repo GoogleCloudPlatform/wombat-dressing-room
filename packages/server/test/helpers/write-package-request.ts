@@ -19,16 +19,22 @@ import {Request} from 'express';
 
 export function writePackageRequest(
   headers: {[key: string]: string},
-  packument?: Packument | string,
+  packument?: Packument | string | undefined,
   packageName?: string
 ): Request {
+  // The content may have different forms:
+  // - The Packument JSON for `npm publish`
+  // - JSON string (having double-quotes) for `npm dist-tag add`
+  // - Emtpy string for `npm dist-tag rm`
+  const content = packument === undefined ? '' : JSON.stringify(packument);
+
   return {
     headers,
     params: {package: packageName},
     on: (event: 'data' | 'end', listener: (buffer?: Buffer) => void) => {
       switch (event) {
         case 'data':
-          listener(Buffer.from(JSON.stringify(packument)));
+          listener(Buffer.from(content));
           break;
         case 'end':
           listener();
