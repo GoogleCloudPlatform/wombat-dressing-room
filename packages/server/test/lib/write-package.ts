@@ -128,6 +128,51 @@ describe('writePackage', () => {
     expect(ret.statusCode).to.equal(200);
   });
 
+  it('does not fail when body is an empty string (e.g., from npm dist-tag rm)', async () => {
+    sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+      username: 'bcoe',
+      created: 1578630249529,
+      value: 'deadbeef',
+    });
+    sinon.stub(writePackage.datastore, 'getUser').resolves({
+      name: 'bcoe',
+      token: 'deadbeef',
+    });
+
+    sinon
+      .stub(writePackage, 'pipeToNpm')
+      .callsFake((_req, _res, _body, newPackage) => {
+        return Promise.resolve({statusCode: 200, newPackage});
+      });
+
+    // Simulate an empty body
+    const req = writePackageRequest(
+      {authorization: 'token: abc123'},
+      undefined
+    );
+    const res = mockResponse();
+
+    // Mock existing package with repository info
+    const npmRequest = nock('https://registry.npmjs.org')
+      .get('/@soldair%2ffoo')
+      .reply(
+        200,
+        createPackument('@soldair/foo')
+          .addVersion('1.0.0', 'https://github.com/foo/bar')
+          .packument()
+      );
+
+    // Mock github permission check
+    const githubRequest = nock('https://api.github.com')
+      .get('/repos/foo/bar')
+      .reply(200, {permissions: {push: true}});
+
+    const ret = await writePackage('@soldair/foo', req, res);
+    expect(ret.statusCode).to.equal(200);
+    npmRequest.done();
+    githubRequest.done();
+  });
+
   describe('releaseAs2FA', () => {
     it('appropriately routes initial package publication', async () => {
       // Fake that there's a releaseAs2FA key in datastore:

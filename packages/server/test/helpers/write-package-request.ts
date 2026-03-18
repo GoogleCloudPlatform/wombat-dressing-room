@@ -28,7 +28,9 @@ export function writePackageRequest(
     on: (event: 'data' | 'end', listener: (buffer?: Buffer) => void) => {
       switch (event) {
         case 'data':
-          listener(Buffer.from(JSON.stringify(packument)));
+          if (packument !== undefined) {
+            listener(Buffer.from(JSON.stringify(packument)));
+          }
           break;
         case 'end':
           listener();
