@@ -15,6 +15,7 @@
  */
 
 import {URL} from 'url';
+import {WombatServerError} from './wombat-server-error';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const gh = require('octonode');
@@ -26,7 +27,7 @@ let clientOptions: {} | undefined;
  * @param name repository name including username. ex: node/node or bcoe/yargs
  * @param token
  *
- * @returns GhUser
+ * @returns GhRepo
  */
 export const getRepo = (name: string, token: string): Promise<GhRepo> => {
   return new Promise((resolve, reject) => {
@@ -36,7 +37,10 @@ export const getRepo = (name: string, token: string): Promise<GhRepo> => {
       // bubbling this up as a unique error because its useful for folks to know
       // that the repo might not exist.
       if (status === 404) {
-        return reject(new Error('repository ' + name + ' doesnt exist'));
+        // Specifying nonexistent repository field is a bad request.
+        return reject(
+          new WombatServerError('repository ' + name + ' doesnt exist', 400)
+        );
       }
 
       if (err || status !== 200) {
