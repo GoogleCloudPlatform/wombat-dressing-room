@@ -25,7 +25,7 @@
   "devDependencies": {
     "@types/chai": "^4.2.7",
     "@types/cookie-session": "^2.0.36",
-    "@types/express": "^4.16.0",
+    "@types/express": "^5.0.0",
     "@types/express-handlebars": "^5.0.0",
     "@types/github-url-from-git": "^1.5.0",
     "@types/is-uuid": "^1.0.0",
@@ -50,7 +50,7 @@
     "@otplib/preset-default": "^12.0.0",
     "cookie-session": "^2.0.0-beta.3",
     "dotenv": "^16.0.0",
-    "express": "^4.16.4",
+    "express": "^5.0.0",
     "github-url-from-git": "^1.5.0",
     "is-uuid": "^1.0.2",
     "morgan": "^1.9.1",
