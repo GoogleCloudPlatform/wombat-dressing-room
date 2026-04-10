@@ -173,6 +173,52 @@ describe('writePackage', () => {
     githubRequest.done();
   });
 
+  it('returns correct error message when GitHub returns 404 for repository', async () => {
+    // There was a problem where a 404 error from GitHub API
+    // resulted in a 404 error from Wombat Dressing Room to npm CLI.
+
+    sinon.stub(writePackage.datastore, 'getPublishKey').resolves({
+      username: 'bcoe',
+      created: 1578630249529,
+      value: 'deadbeef',
+    });
+    sinon.stub(writePackage.datastore, 'getUser').resolves({
+      name: 'bcoe',
+      token: 'deadbeef',
+    });
+
+    // Mock existing package with repository info
+    const npmRequest = nock('https://registry.npmjs.org')
+      .get('/@soldair%2ffoo')
+      .reply(
+        200,
+        createPackument('@soldair/foo')
+          .addVersion('1.0.0', 'https://github.com/foo/bar')
+          .packument()
+      );
+
+    // Mock github returning 404 for the repository
+    const githubRequest = nock('https://api.github.com')
+      .get('/repos/foo/bar')
+      .reply(404);
+
+    const req = writePackageRequest(
+      {authorization: 'token: abc123'},
+      createPackument('@soldair/foo')
+        .addVersion('1.1.0', 'https://github.com/foo/bar')
+        .packument()
+    );
+    const res = mockResponse();
+
+    const ret = await writePackage('@soldair/foo', req, res);
+
+    // GitHub returning 404 means the request payload was invalid.
+    expect(ret.statusCode).to.equal(400);
+    expect(ret.error).to.match(/repository foo\/bar doesnt exist/);
+    npmRequest.done();
+    githubRequest.done();
+  });
+
   describe('releaseAs2FA', () => {
     it('appropriately routes initial package publication', async () => {
       // Fake that there's a releaseAs2FA key in datastore:
