@@ -58,7 +58,7 @@
     "otplib": "^12.0.0",
     "request": "^2.88.0",
     "source-map-support": "^0.5.9",
-    "uuid": "^9.0.0",
+    "uuid": "^14.0.0",
     "validate-npm-package-name": "^5.0.0"
   },
   "engines": {
