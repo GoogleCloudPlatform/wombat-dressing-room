@@ -42,7 +42,7 @@ function mockResponse() {
 
 describe('putDeleteVersion', () => {
   it('responds with 401 if publication key not found in datastore', async () => {
-    writePackage.datastore = Object.assign({}, datastore, {
+    putDeleteVersion.datastore = Object.assign({}, datastore, {
       getPublishKey: async (): Promise<PublishKey | false> => {
         return false;
       },
@@ -60,7 +60,7 @@ describe('putDeleteVersion', () => {
 
   it('allows a package version to be deleted', async () => {
     // Fake that there's a token in datastore:
-    writePackage.datastore = Object.assign({}, datastore, {
+    putDeleteVersion.datastore = Object.assign({}, datastore, {
       getPublishKey: async (): Promise<PublishKey | false> => {
         return {
           username: 'bcoe',
@@ -111,5 +111,134 @@ describe('putDeleteVersion', () => {
     githubRequest.done();
     expect(result.newPackage).to.equal(false);
     expect(result.statusCode).to.equal(200);
+  });
+
+  it('allows a package version to be deleted (DELETE) for release-backed token if release exists', async () => {
+    putDeleteVersion.datastore = Object.assign({}, datastore, {
+      getPublishKey: async (): Promise<PublishKey | false> => {
+        return {
+          username: 'bcoe',
+          created: 1578630249529,
+          value: 'deadbeef',
+          releaseAs2FA: true,
+        };
+      },
+      getUser: async (): Promise<false | User> => {
+        return {name: 'bcoe', token: 'deadbeef'};
+      },
+    });
+    writePackage.pipeToNpm = (
+      req: Request,
+      res: Response,
+      drainedBody: false | Buffer,
+      newPackage: boolean
+    ): Promise<WriteResponse> => {
+      return Promise.resolve({statusCode: 200, newPackage});
+    };
+
+    const req = writePackageRequest(
+      {authorization: 'token: abc123'},
+      undefined,
+      '@soldair/foo'
+    );
+    req.method = 'DELETE';
+    req.params = {
+      package: '@soldair/foo',
+      tarball: '@soldair/foo-1.0.0.tgz',
+      sha: 'revision123',
+    };
+    const res = mockResponse();
+
+    const npmRequest = nock('https://registry.npmjs.org')
+      .get('/@soldair%2ffoo')
+      .reply(
+        200,
+        createPackument('@soldair/foo')
+          .addVersion('1.0.0', 'https://github.com/foo/bar')
+          .packument()
+      );
+
+    const githubRequest = nock('https://api.github.com')
+      .get('/repos/foo/bar')
+      .reply(200, {permissions: {push: true}})
+      .get('/repos/foo/bar/releases/tags/v1.0.0')
+      .reply(200, {name: 'v1.0.0'});
+
+    const result = await putDeleteVersion(req, res);
+    npmRequest.done();
+    githubRequest.done();
+    expect(result.statusCode).to.equal(200);
+  });
+
+  it('rejects package version deletion (DELETE) for release-backed token if release does not exist', async () => {
+    putDeleteVersion.datastore = Object.assign({}, datastore, {
+      getPublishKey: async (): Promise<PublishKey | false> => {
+        return {
+          username: 'bcoe',
+          created: 1578630249529,
+          value: 'deadbeef',
+          releaseAs2FA: true,
+        };
+      },
+      getUser: async (): Promise<false | User> => {
+        return {name: 'bcoe', token: 'deadbeef'};
+      },
+    });
+
+    const req = writePackageRequest(
+      {authorization: 'token: abc123'},
+      undefined,
+      '@soldair/foo'
+    );
+    req.method = 'DELETE';
+    req.params = {
+      package: '@soldair/foo',
+      tarball: '@soldair/foo-1.0.0.tgz',
+      sha: 'revision123',
+    };
+    const res = mockResponse();
+
+    const npmRequest = nock('https://registry.npmjs.org')
+      .get('/@soldair%2ffoo')
+      .reply(
+        200,
+        createPackument('@soldair/foo')
+          .addVersion('1.0.0', 'https://github.com/foo/bar')
+          .packument()
+      );
+
+    const githubRequest = nock('https://api.github.com')
+      .get('/repos/foo/bar')
+      .reply(200, {permissions: {push: true}})
+      .get('/repos/foo/bar/releases/tags/v1.0.0')
+      .reply(404)
+      .get('/repos/foo/bar/tags?per_page=100&page=1')
+      .reply(200, [])
+      .get('/repos/foo/bar/tags?per_page=100&page=2')
+      .reply(200, [])
+      .get('/repos/foo/bar/tags?per_page=100&page=3')
+      .reply(200, [])
+      .get('/repos/foo/bar/tags?per_page=100&page=4')
+      .reply(200, [])
+      .get('/repos/foo/bar/tags?per_page=100&page=5')
+      .reply(200, [])
+      .get('/repos/foo/bar/tags?per_page=100&page=6')
+      .reply(200, [])
+      .get('/repos/foo/bar/tags?per_page=100&page=7')
+      .reply(200, [])
+      .get('/repos/foo/bar/tags?per_page=100&page=8')
+      .reply(200, [])
+      .get('/repos/foo/bar/tags?per_page=100&page=9')
+      .reply(200, [])
+      .get('/repos/foo/bar/tags?per_page=100&page=10')
+      .reply(200, [])
+      .get('/repos/foo/bar/tags?per_page=100&page=11')
+      .reply(200, []);
+
+    const result = await putDeleteVersion(req, res);
+    npmRequest.done();
+    githubRequest.done();
+    expect(result.statusCode).to.equal(400);
+    expect(result.error).to.match(/matching release v1.0.0 not found/);
   });
 });

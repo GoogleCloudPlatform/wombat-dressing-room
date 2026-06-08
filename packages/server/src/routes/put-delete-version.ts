@@ -16,6 +16,8 @@
 
 import * as express from 'express';
 import {writePackage} from '../lib/write-package';
+import {authorizeNpmAction} from '../lib/authorization';
+import * as datastore from '../lib/datastore';
 
 // PUT
 // https://wombat-dressing-room.appspot.com/release-please-sql-test/-rev/1-deadbeef
@@ -23,13 +25,46 @@ export const putDeleteVersion = async (
   req: express.Request,
   res: express.Response
 ) => {
-  const result = await writePackage(
-    decodeURIComponent(req.params.package),
+  const packageName = decodeURIComponent(req.params.package);
+
+  // Try to extract version from tarball name
+  const tarball = req.params.tarball || '';
+  const match = tarball.match(/-(\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)?)\.tgz$/);
+  let targetVersion = match ? match[1] : undefined;
+
+  // If not in tarball, maybe it's in the tag parameter?
+  if (!targetVersion && req.params.tag) {
+    if (/^\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)?$/.test(req.params.tag)) {
+      targetVersion = req.params.tag;
+    }
+  }
+
+  const authResult = await authorizeNpmAction(
+    packageName,
     req,
-    res
+    res,
+    targetVersion,
+    putDeleteVersion.datastore
   );
-  // the request has not been ended yet if there has been a wombat
-  // error.
+
+  let result: {statusCode: number; error?: string; newPackage?: boolean} = {
+    statusCode: 200,
+  };
+
+  if (!authResult.authorized) {
+    result = {
+      statusCode: authResult.statusCode || 400,
+      error: authResult.error,
+    };
+  } else {
+    result = await writePackage.pipeToNpm(
+      req,
+      res,
+      authResult.drainedBody || false,
+      false
+    );
+  }
+
   if (result.error) {
     console.error('unpublish error ', req.url, result);
   } else {
@@ -37,3 +72,5 @@ export const putDeleteVersion = async (
   }
   return result;
 };
+
+putDeleteVersion.datastore = datastore;
