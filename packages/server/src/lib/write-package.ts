@@ -24,7 +24,6 @@ import * as github from '../lib/github';
 import {totpCode} from '../lib/totp-code';
 
 import * as datastore from './datastore';
-import {newVersions} from './new-versions';
 import {
   findLatest,
   packument,
@@ -33,6 +32,7 @@ import {
 } from './packument';
 import {WombatServerError} from './wombat-server-error';
 import {User} from './datastore';
+import {enforceMatchingRelease, respondWithError} from './authorization';
 
 export interface WriteResponse {
   statusCode: number;
@@ -285,112 +285,6 @@ async function enforceRepositoryPermission(repoName: string, user: User) {
     throw new WombatServerError(msg, 400);
   }
 }
-
-/*
- * Throws an exception if a matching GitHub release cannot be found for the
- * packument that is being published to npm.
- */
-async function enforceMatchingRelease(
-  repoName: string,
-  token: string,
-  lastPackument: Packument | undefined,
-  drainedBody: Buffer,
-  monorepo?: boolean
-) {
-  try {
-    const maybePackument = JSON.parse(drainedBody + '');
-    if (
-      typeof maybePackument !== 'object' ||
-      maybePackument['dist-tags'] === undefined
-    ) {
-      throw new WombatServerError(
-        'Release-backed tokens should be used exclusively for publication.',
-        400
-      );
-    }
-    // Check whether the publish document contains either a
-    // "latest" or "next" tag:
-    const newPackument = maybePackument as Packument;
-    let newVersionPackument =
-      newPackument.versions[newPackument['dist-tags'].latest || ''];
-    if (!newVersionPackument) {
-      newVersionPackument =
-        newPackument.versions[newPackument['dist-tags'].next || ''];
-    }
-    if (!newVersionPackument) {
-      throw new WombatServerError(
-        'No "latest" or "next" version found in packument.',
-        400
-      );
-    }
-    let newVersion = newVersionPackument.version;
-
-    // If this is not the first package publication, we infer the version being
-    // published by comparing the new and old packument:
-    if (lastPackument) {
-      console.info(
-        `${newPackument.name} has been published before, comparing versions`
-      );
-      const versions = newVersions(lastPackument, newPackument);
-      if (versions.length !== 1) {
-        throw new WombatServerError(
-          'No new versions found in packument. Release-backed tokens should be used exclusively for publication.',
-          400
-        );
-      } else {
-        newVersion = versions[0];
-      }
-    }
-    let prefix;
-    const tags = [];
-    if (monorepo) {
-      const splitName = newPackument.name.split('/');
-      prefix = splitName.length === 1 ? splitName[0] : splitName[1];
-      // release-please-style monorepo tags: package-v2.0.1
-      tags.push(`${prefix}-v${newVersion}`);
-      // lerna-style monorepo tags: @scope/package@2.0.1
-      tags.push(`${newPackument.name}@${newVersion}`);
-    } else {
-      tags.push(`v${newVersion}`);
-    }
-    const release = await github.getRelease(repoName, token, tags);
-    if (!release) {
-      const msg = `matching release v${newVersion} not found for ${repoName}. Did not find any tags matching: ${tags.join()}`;
-      throw new WombatServerError(msg, 400);
-    }
-  } catch (err) {
-    if (err instanceof WombatServerError) {
-      throw err;
-    }
-    if (err instanceof Error) {
-      throw new WombatServerError(err.message || 'unknown error', 500);
-    }
-    throw new WombatServerError('unknown error', 500);
-  }
-}
-
-function respondWithError(res: Response, message: string, code = 400) {
-  res.status(code || 401);
-  const ret = {
-    error: formatError(message),
-    statusCode: code,
-  };
-  res.json(ret);
-  return ret;
-}
-
-// the npm client will print non json errors to the screen in publish.
-// this is a really great way to give detailed error messages
-const formatError = (message: string) => {
-  return `
-  ===============================
-  Publish service error
-  -------------------------------
-  ${message}
-  ===============================
-  `;
-};
-
 writePackage.datastore = datastore;
 
 /**
