@@ -16,6 +16,9 @@
 
 import * as express from 'express';
 import {writePackage} from '../lib/write-package';
+import {authorizeNpmAction} from '../lib/authorization';
+import {drainRequest} from '../lib/drain-request';
+import * as datastore from '../lib/datastore';
 
 // PUT
 // https://wombat-dressing-room.appspot.com/-/package/soldair-test-package/dist-tags/latest
@@ -23,16 +26,43 @@ export const putDeleteTag = async (
   req: express.Request,
   res: express.Response
 ) => {
-  const result = await writePackage(
-    decodeURIComponent(req.params.package),
+  const packageName = decodeURIComponent(req.params.package);
+  let drainedBody: false | Buffer = false;
+  let targetVersion: string | undefined = undefined;
+
+  if (req.method === 'PUT') {
+    drainedBody = await drainRequest(req);
+    try {
+      targetVersion = JSON.parse(drainedBody + '') as string;
+    } catch (e) {
+      console.error('Failed to parse dist-tag body:', e);
+    }
+  }
+
+  const authResult = await authorizeNpmAction(
+    packageName,
     req,
-    res
+    res,
+    targetVersion,
+    putDeleteTag.datastore
   );
-  // the request has not been ended yet if there has been a wombat
-  // error.
+
+  let result: {statusCode: number; error?: string} = {statusCode: 200};
+
+  if (!authResult.authorized) {
+    result = {
+      statusCode: authResult.statusCode || 400,
+      error: authResult.error,
+    };
+  } else {
+    result = await writePackage.pipeToNpm(req, res, drainedBody, false);
+  }
+
   if (result.error) {
     console.log('create dist tag error ', req.url, result);
   } else {
     console.log('');
   }
 };
+
+putDeleteTag.datastore = datastore;
