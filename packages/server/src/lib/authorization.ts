@@ -14,10 +14,6 @@ import {newVersions} from './new-versions';
 import {WombatServerError} from './wombat-server-error';
 import {config} from './config';
 
-export const authorizationDeps = {
-  datastore,
-};
-
 interface GithubRepository {
   name: string;
   url: string;
@@ -31,6 +27,8 @@ export interface AuthorizationResult {
   repo?: GithubRepository;
   newPackage?: boolean;
   drainedBody?: false | Buffer;
+  error?: string;
+  statusCode?: number;
 }
 
 export function respondWithError(res: Response, message: string, code = 400) {
@@ -58,27 +56,32 @@ export async function authorizeNpmAction(
   req: Request,
   res: Response,
   targetVersion?: string,
-  datastoreOverride?: typeof datastore
+  datastoreOverride = datastore
 ): Promise<AuthorizationResult> {
-  const db = datastoreOverride || authorizationDeps.datastore;
   const auth = req.headers.authorization + '';
   const token = auth.split(' ').pop();
-  const pubKey = await db.getPublishKey(token + '');
+  const pubKey = await datastoreOverride.getPublishKey(token + '');
 
   if (!pubKey) {
-    respondWithError(res, 'publish key not found', 401);
-    return {authorized: false};
+    return {
+      authorized: false,
+      ...respondWithError(res, 'publish key not found', 401),
+    };
   }
 
   if (pubKey.expiration && pubKey.expiration <= Date.now()) {
-    respondWithError(res, 'publish key expired', 401);
-    return {authorized: false};
+    return {
+      authorized: false,
+      ...respondWithError(res, 'publish key expired', 401),
+    };
   }
 
-  const user = await db.getUser(pubKey.username);
+  const user = await datastoreOverride.getUser(pubKey.username);
   if (!user) {
-    respondWithError(res, 'publish token unauthenticated', 401);
-    return {authorized: false};
+    return {
+      authorized: false,
+      ...respondWithError(res, 'publish token unauthenticated', 401),
+    };
   }
 
   console.info(
@@ -102,8 +105,7 @@ export async function authorizeNpmAction(
     npm login --registry ${config.userRegistryUrl}
     again to publish this package.
     `;
-    respondWithError(res, msg, 401);
-    return {authorized: false};
+    return {authorized: false, ...respondWithError(res, msg, 401)};
   }
 
   console.info('fetching ', packageName, 'from npm');
@@ -124,8 +126,7 @@ export async function authorizeNpmAction(
     } catch (e) {
       console.info('got ' + e + ' parsing publish');
       const msg = 'malformed json package document in publish a new package';
-      respondWithError(res, msg, 400);
-      return {authorized: false};
+      return {authorized: false, ...respondWithError(res, msg, 400)};
     }
   } else {
     latest = findLatest(doc);
@@ -135,8 +136,7 @@ export async function authorizeNpmAction(
     console.info('missing latest version for ' + packageName);
     const msg =
       'not supported yet. package is rather strange. its not new and has no latest version';
-    respondWithError(res, msg, 500);
-    return {authorized: false};
+    return {authorized: false, ...respondWithError(res, msg, 500)};
   }
 
   const reposToCheck = new Set<string>();
@@ -156,8 +156,7 @@ export async function authorizeNpmAction(
       }
     } catch (e) {
       if (e instanceof WombatServerError) {
-        respondWithError(res, e.message, e.statusCode);
-        return {authorized: false};
+        return {authorized: false, ...respondWithError(res, e.message, e.statusCode)};
       }
       throw e;
     }
@@ -171,8 +170,7 @@ export async function authorizeNpmAction(
     );
     const msg =
       'in order to publish the latest version must have package.json with a repository.';
-    respondWithError(res, msg, 400);
-    return {authorized: false};
+    return {authorized: false, ...respondWithError(res, msg, 400)};
   }
 
   for (const repoName of reposToCheck) {
@@ -180,8 +178,7 @@ export async function authorizeNpmAction(
       await enforceRepositoryPermission(repoName, user);
     } catch (_e) {
       const e = _e as {message: string; statusCode: number};
-      respondWithError(res, e.message, e.statusCode);
-      return {authorized: false};
+      return {authorized: false, ...respondWithError(res, e.message, e.statusCode)};
     }
   }
 
@@ -205,9 +202,19 @@ export async function authorizeNpmAction(
         targetVersion
       );
     } catch (_e) {
-      const e = _e as {statusMessage: string; statusCode: number};
-      respondWithError(res, e.statusMessage, e.statusCode);
-      return {authorized: false};
+      const e = _e as {
+        statusMessage: string;
+        statusCode: number;
+        message?: string;
+      };
+      return {
+        authorized: false,
+        ...respondWithError(
+          res,
+          e.statusMessage || e.message || 'unknown error',
+          e.statusCode
+        ),
+      };
     }
   }
 

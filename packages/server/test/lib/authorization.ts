@@ -9,10 +9,7 @@ import {writePackageRequest} from '../helpers/write-package-request';
 import * as datastore from '../../src/lib/datastore';
 import {PublishKey, User} from '../../src/lib/datastore';
 import {WombatServerError} from '../../src/lib/wombat-server-error';
-import {
-  authorizeNpmAction,
-  authorizationDeps,
-} from '../../src/lib/authorization';
+import {authorizeNpmAction} from '../../src/lib/authorization';
 
 nock.disableNetConnect();
 
@@ -29,19 +26,25 @@ function mockResponse() {
 
 describe('authorizeNpmAction', () => {
   it('responds with 401 if publication key not found in datastore', async () => {
-    authorizationDeps.datastore = Object.assign({}, datastore, {
+    const mockedDatastore = Object.assign({}, datastore, {
       getPublishKey: async (): Promise<PublishKey | false> => {
         return false;
       },
     });
     const req = {headers: {authorization: 'token: abc123'}} as Request;
     const res = mockResponse();
-    const ret = await authorizeNpmAction('@soldair/foo', req, res);
+    const ret = await authorizeNpmAction(
+      '@soldair/foo',
+      req,
+      res,
+      undefined,
+      mockedDatastore
+    );
     expect(ret.authorized).to.equal(false);
   });
 
   it('responds with 401 if publication key expired', async () => {
-    authorizationDeps.datastore = Object.assign({}, datastore, {
+    const mockedDatastore = Object.assign({}, datastore, {
       getPublishKey: async (): Promise<PublishKey | false> => {
         return {
           username: 'bcoe',
@@ -53,12 +56,18 @@ describe('authorizeNpmAction', () => {
     });
     const req = {headers: {authorization: 'token: abc123'}} as Request;
     const res = mockResponse();
-    const ret = await authorizeNpmAction('@soldair/foo', req, res);
+    const ret = await authorizeNpmAction(
+      '@soldair/foo',
+      req,
+      res,
+      undefined,
+      mockedDatastore
+    );
     expect(ret.authorized).to.equal(false);
   });
 
   it('responds with 401 if user not found', async () => {
-    authorizationDeps.datastore = Object.assign({}, datastore, {
+    const mockedDatastore = Object.assign({}, datastore, {
       getPublishKey: async (): Promise<PublishKey | false> => {
         return {
           username: 'bcoe',
@@ -72,12 +81,18 @@ describe('authorizeNpmAction', () => {
     });
     const req = {headers: {authorization: 'token: abc123'}} as Request;
     const res = mockResponse();
-    const ret = await authorizeNpmAction('@soldair/foo', req, res);
+    const ret = await authorizeNpmAction(
+      '@soldair/foo',
+      req,
+      res,
+      undefined,
+      mockedDatastore
+    );
     expect(ret.authorized).to.equal(false);
   });
 
   it('responds with 401 if token is scoped to a different package', async () => {
-    authorizationDeps.datastore = Object.assign({}, datastore, {
+    const mockedDatastore = Object.assign({}, datastore, {
       getPublishKey: async (): Promise<PublishKey | false> => {
         return {
           username: 'bcoe',
@@ -92,12 +107,18 @@ describe('authorizeNpmAction', () => {
     });
     const req = {headers: {authorization: 'token: abc123'}} as Request;
     const res = mockResponse();
-    const ret = await authorizeNpmAction('@soldair/foo', req, res);
+    const ret = await authorizeNpmAction(
+      '@soldair/foo',
+      req,
+      res,
+      undefined,
+      mockedDatastore
+    );
     expect(ret.authorized).to.equal(false);
   });
 
   it('authorizes if permissions are valid and releaseAs2FA is disabled', async () => {
-    authorizationDeps.datastore = Object.assign({}, datastore, {
+    const mockedDatastore = Object.assign({}, datastore, {
       getPublishKey: async (): Promise<PublishKey | false> => {
         return {
           username: 'bcoe',
@@ -126,7 +147,13 @@ describe('authorizeNpmAction', () => {
       .get('/repos/foo/bar')
       .reply(200, {permissions: {push: true}});
 
-    const ret = await authorizeNpmAction('@soldair/foo', req, res);
+    const ret = await authorizeNpmAction(
+      '@soldair/foo',
+      req,
+      res,
+      undefined,
+      mockedDatastore
+    );
     npmRequest.done();
     githubRequest.done();
     expect(ret.authorized).to.equal(true);

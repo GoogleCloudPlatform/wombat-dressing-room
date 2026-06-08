@@ -14,25 +14,14 @@
  * limitations under the License.
  */
 
-import {Packument} from '@npm/types';
 import {Request, Response} from 'express';
 import * as request from 'request';
 
 import {config} from '../lib/config';
-import {drainRequest} from '../lib/drain-request';
-import * as github from '../lib/github';
 import {totpCode} from '../lib/totp-code';
 
 import * as datastore from './datastore';
-import {
-  findLatest,
-  packument,
-  repoToGithub,
-  PackumentVersionWombat,
-} from './packument';
-import {WombatServerError} from './wombat-server-error';
-import {User} from './datastore';
-import {enforceMatchingRelease, respondWithError} from './authorization';
+import {authorizeNpmAction} from './authorization';
 
 export interface WriteResponse {
   statusCode: number;
@@ -65,163 +54,26 @@ export const writePackage = async (
   req: Request,
   res: Response
 ): Promise<WriteResponse> => {
-  // verify authorization.
-  const auth = req.headers.authorization + '';
-  const token = auth.split(' ').pop();
-  const pubKey = await writePackage.datastore.getPublishKey(token + '');
-
-  if (!pubKey) {
-    return respondWithError(res, 'publish key not found', 401);
-  }
-
-  if (pubKey.expiration && pubKey.expiration <= Date.now()) {
-    return respondWithError(res, 'publish key expired', 401);
-  }
-
-  // get the client github user token with pubKey.username
-  const user = await writePackage.datastore.getUser(pubKey.username);
-  if (!user) {
-    return respondWithError(res, 'publish token unauthenticated', 401);
-  }
-
-  console.info(
-    'attempting to publish package ' + packageName + ' with publish key config:'
+  const authResult = await authorizeNpmAction(
+    packageName,
+    req,
+    res,
+    undefined,
+    writePackage.datastore
   );
-  console.info(
-    'package',
-    pubKey.package,
-    'releaseAs2FA',
-    pubKey.releaseAs2FA,
-    'username',
-    pubKey.username,
-    'monorepo',
-    pubKey.monorepo
+  if (!authResult.authorized) {
+    return {
+      statusCode: authResult.statusCode || 400,
+      error: authResult.error,
+    };
+  }
+
+  return writePackage.pipeToNpm(
+    req,
+    res,
+    authResult.drainedBody || false,
+    authResult.newPackage || false
   );
-
-  if (pubKey.package && pubKey.package !== packageName) {
-    console.info('401. token cannot publish this package ' + packageName);
-    const msg = `
-    This token cannot publish npm package ${packageName} you'll need to
-    npm login --registry ${config.userRegistryUrl}
-    again to publish this package.
-    `;
-    return respondWithError(res, msg, 401);
-  }
-
-  // fetch existing packument
-  console.info('fetching ', packageName, 'from npm');
-  let docFromNpm = await packument(packageName);
-
-  let latest = undefined;
-
-  let newPackage = false;
-  let drainedBody: false | Buffer = false;
-  if (!docFromNpm || docFromNpm?.time?.unpublished) {
-    // this is a completely new package.
-    newPackage = true;
-    drainedBody = await drainRequest(req);
-    // set latest so we use the repository of the new package to verify github
-    // permissions
-    try {
-      docFromNpm = JSON.parse(drainedBody + '') as Packument;
-      latest = docFromNpm.versions[
-        docFromNpm['dist-tags'].latest || ''
-      ] as PackumentVersionWombat;
-      // not all packages have a latest dist-tag
-    } catch (e) {
-      console.info('got ' + e + ' parsing publish');
-      const msg = 'malformed json package document in publish a new package';
-      return respondWithError(res, msg, 400);
-    }
-  } else {
-    // the package already exists!
-    latest = findLatest(docFromNpm);
-  }
-
-  if (!latest) {
-    console.info('missing latest version for ' + packageName);
-    // we need to verify that this package has a repo config that points to
-    // github so users don't lock themselves out.
-    const msg =
-      'not supported yet. package is rather strange. its not new and has no latest version';
-    return respondWithError(res, msg, 500);
-  }
-
-  // A set of repositories to confirm users' "push" permissions.
-  // This is not just the latest version but also incoming package.json
-  // to avoid a bad repository value to be published (and cannot be updated).
-  const reposToCheck = new Set<string>();
-
-  // helper to add repository to check list
-  const addRepo = (v: PackumentVersionWombat) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const repoInfo = repoToGithub(v.permsRepo ?? v.repository);
-    if (repoInfo) {
-      reposToCheck.add(repoInfo.name);
-    }
-  };
-  // check the repository of the latest version and upcoming package.json
-  addRepo(latest);
-
-  drainedBody = drainedBody || (await drainRequest(req));
-  try {
-    for (const repoName of getReposFromIncomingBody(drainedBody)) {
-      reposToCheck.add(repoName);
-    }
-  } catch (e) {
-    if (e instanceof WombatServerError) {
-      return respondWithError(res, e.message, e.statusCode);
-    }
-    throw e;
-  }
-
-  if (reposToCheck.size === 0) {
-    // For operations that are outside package publications, reposToCheck
-    // has only one item (the latest from NPM).
-    // drainedBodyString includes the tarball attachemnt. Don't print all.
-    console.info(
-      'missing repositories to check for ' + packageName,
-      'The request body:',
-      (drainedBody + '').slice(0, 1000)
-    );
-    const msg =
-      'in order to publish the latest version must have package.json with a repository.';
-    return respondWithError(res, msg, 400);
-  }
-
-  for (const repoName of reposToCheck) {
-    try {
-      await enforceRepositoryPermission(repoName, user);
-    } catch (_e) {
-      const e = _e as {statusMessage: string; statusCode: number};
-      return respondWithError(res, e.statusMessage, e.statusCode);
-    }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const repo = repoToGithub(latest.permsRepo ?? latest.repository);
-
-  // If the publication key has been configured with GitHub releases as a
-  // second factor of authentication, we verify that the version being published
-  // in the new packument aligns with the latest release created on GitHub:
-  if (pubKey.releaseAs2FA && repo) {
-    console.info('token uses releases as 2FA');
-    drainedBody = drainedBody || (await drainRequest(req));
-    try {
-      await enforceMatchingRelease(
-        repo.name,
-        user.token,
-        newPackage ? undefined : docFromNpm,
-        drainedBody,
-        pubKey.monorepo
-      );
-    } catch (_e) {
-      const e = _e as {statusMessage: string; statusCode: number};
-      return respondWithError(res, e.statusMessage, e.statusCode);
-    }
-  }
-
-  return writePackage.pipeToNpm(req, res, drainedBody, newPackage);
 };
 
 writePackage.pipeToNpm = (
@@ -266,89 +118,7 @@ writePackage.pipeToNpm = (
   });
 };
 
-/*
- * Throws an exception if the user does not have "push" permission
- * to the repository.
- */
-async function enforceRepositoryPermission(repoName: string, user: User) {
-  let repoResp = null;
-  repoResp = await github.getRepo(repoName, user.token);
 
-  if (!repoResp) {
-    const msg = `in order to publish the latest version must have a repository ${user.name} can't see it`;
-    throw new WombatServerError(msg, 400);
-  }
-  console.info(repoName, ': response!', repoResp.permissions);
-
-  if (!(repoResp.permissions.push || repoResp.permissions.admin)) {
-    const msg = `${user.name} cannot push repo https://github.com/${repoName}. push permission required to publish.`;
-    throw new WombatServerError(msg, 400);
-  }
-}
 writePackage.datastore = datastore;
 
-/**
- * Returns the repository names found in the incoming Packument body.
- *
- * This function parses the request body as a Packument and collects all unique
- * repository names associated with the package versions being published.
- *
- * @param body - The request body as a Buffer.
- * @returns A set of repository names.
- * @throws WombatServerError if the Packument is malformed or missing repository fields.
- */
-function getReposFromIncomingBody(body: Buffer): Set<string> {
-  const bodyString = body + '';
-  const repos = new Set<string>();
-  if (!bodyString) {
-    return repos;
-  }
 
-  try {
-    const doc = JSON.parse(bodyString) as Packument;
-
-    // Not all npm commands send Packument as the request body.
-    // For eaxmple, `npm dist-tag rm <packaage> false` sends
-    // a string in the request body. The logic around Packument validation
-    // should skip such cases. Note that the "as Packument" in TypeScript
-    // above is not enforced in the JavaScript runtime.
-    if (doc && typeof doc === 'object' && doc.versions) {
-      // The document in the "npm publish" request body only has one
-      // key-value entry in the "versions" field.
-      // With "--no-tag" option in "npm publish", it does not have the
-      // "latest" tag in the "dist-tag" field of the document.
-      for (const version of Object.values(doc.versions)) {
-        const v = version as PackumentVersionWombat;
-        if (!v || (!v.repository && !v.permsRepo)) {
-          // bodyString includes the tarball attachment. Don't print all.
-          console.info(
-            'incoming package.json is missing repository (or permsRepo) field',
-            bodyString.slice(0, 1000)
-          );
-          const msg =
-            'in order to publish, the package.json must have a repository (or permsRepo) field.';
-          throw new WombatServerError(msg, 400);
-        }
-        const repoInfo = repoToGithub(v.permsRepo ?? v.repository);
-        if (repoInfo) {
-          repos.add(repoInfo.name);
-        }
-      }
-    }
-  } catch (e) {
-    if (e instanceof WombatServerError) {
-      throw e;
-    }
-    // bodyString includes the tarball attachment. Don't print all.
-    console.info(
-      'got ' + e + ' parsing publish. The request body:',
-      bodyString.slice(0, 1000)
-    );
-    // Show the stacktrace.
-    console.info(e);
-    const msg = 'malformed json package document in the request';
-    throw new WombatServerError(msg, 400);
-  }
-
-  return repos;
-}
