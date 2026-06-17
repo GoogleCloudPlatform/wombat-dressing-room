@@ -333,4 +333,69 @@ describe('writePackage repository validation', () => {
 
     nock.cleanAll();
   });
+
+  it('successfully deprecates (PUT with full packument) even if an old version lacks repository, as long as latest has it', async () => {
+    writePackage.datastore = Object.assign({}, datastore, {
+      getPublishKey: async (): Promise<PublishKey | false> => {
+        return {
+          username: 'suztomo',
+          created: 1578630249529,
+          value: 'deadbeef',
+        };
+      },
+      getUser: async (): Promise<false | User> => {
+        return {name: 'suztomo', token: 'deadbeef'};
+      },
+    });
+
+    writePackage.pipeToNpm = (
+      req: Request,
+      res: Response,
+      drainedBody: false | Buffer,
+      newPackage: boolean
+    ): Promise<WriteResponse> => {
+      return Promise.resolve({statusCode: 200, newPackage});
+    };
+
+    // Incoming request (simulating deprecation) has both versions
+    // 1.0.0 (no repo) and 1.1.0 (has repo)
+    const incomingPackument = createPackument('@soldair/foo')
+      .addVersion('1.0.0') // No repo
+      .addVersion('1.1.0', 'https://github.com/foo/bar') // Has repo
+      .packument();
+
+    // Simulate deprecation change
+    (incomingPackument.versions['1.0.0'] as any).deprecated = 'deprecated';
+
+    const req = writePackageRequest(
+      {authorization: 'token: abc123'},
+      incomingPackument
+    );
+    const res = mockResponse();
+
+    // Registry also has both versions
+    const npmRequest = nock('https://registry.npmjs.org')
+      .get('/@soldair%2ffoo')
+      .reply(
+        200,
+        createPackument('@soldair/foo')
+          .addVersion('1.0.0')
+          .addVersion('1.1.0', 'https://github.com/foo/bar')
+          .packument()
+      );
+
+    // Mock github permission check for the latest version's repo
+    const githubRequest = nock('https://api.github.com')
+      .get('/repos/foo/bar')
+      .reply(200, {permissions: {push: true}});
+
+    const ret = await writePackage('@soldair/foo', req, res);
+    npmRequest.done();
+    githubRequest.done();
+
+    expect(ret.statusCode).to.equal(200);
+    expect(ret.error).to.be.undefined;
+
+    nock.cleanAll();
+  });
 });
