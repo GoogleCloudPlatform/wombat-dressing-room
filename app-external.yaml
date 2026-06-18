@@ -1,2 +1,2 @@
-runtime: nodejs20
+runtime: nodejs22
 #service: external
