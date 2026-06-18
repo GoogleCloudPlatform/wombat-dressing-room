@@ -164,9 +164,16 @@ export const writePackage = async (
   addRepo(latest);
 
   drainedBody = drainedBody || (await drainRequest(req));
+
   try {
-    for (const repoName of getReposFromIncomingBody(drainedBody)) {
-      reposToCheck.add(repoName);
+    if (!isMetadataUpdate(drainedBody, docFromNpm, newPackage)) {
+      for (const repoName of getReposFromIncomingBody(drainedBody)) {
+        reposToCheck.add(repoName);
+      }
+    } else {
+      console.info(
+        `Skipping incoming repos check for ${packageName} as it is a metadata-only update.`
+      );
     }
   } catch (e) {
     if (e instanceof WombatServerError) {
@@ -457,4 +464,39 @@ function getReposFromIncomingBody(body: Buffer): Set<string> {
   }
 
   return repos;
+}
+
+/**
+ * Detects if the incoming request is a metadata-only update (e.g., deprecation).
+ *
+ * It compares the versions in the incoming packument with the existing packument
+ * in the registry. If no new versions are being introduced, it is considered a
+ * metadata-only update.
+ *
+ * @param drainedBody - The request body as a Buffer.
+ * @param docFromNpm - The existing packument from the registry, if it exists.
+ * @param newPackage - Whether this is a publication of a new package.
+ * @returns True if it is a metadata-only update, false otherwise.
+ */
+function isMetadataUpdate(
+  drainedBody: Buffer,
+  docFromNpm: Packument | false | undefined,
+  newPackage: boolean
+): boolean {
+  try {
+    const incomingDoc = JSON.parse(drainedBody + '');
+    if (
+      !newPackage &&
+      docFromNpm &&
+      incomingDoc &&
+      typeof incomingDoc === 'object' &&
+      incomingDoc.versions
+    ) {
+      const newVers = newVersions(docFromNpm, incomingDoc);
+      return newVers.length === 0;
+    }
+  } catch (e) {
+    // If it's not valid JSON, we don't treat it as metadata update of a packument.
+  }
+  return false;
 }
