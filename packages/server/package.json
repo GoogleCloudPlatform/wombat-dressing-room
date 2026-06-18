@@ -23,7 +23,7 @@
   "author": "Google LLC",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@types/chai": "^4.2.7",
+    "@types/chai": "^5.0.0",
     "@types/cookie-session": "^2.0.36",
     "@types/express": "^4.16.0",
     "@types/express-handlebars": "^5.0.0",
