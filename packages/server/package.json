@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@google-cloud/datastore": "^7.0.0",
-    "@npm/types": "^1.0.1",
+    "@npm/types": "^2.0.0",
     "@otplib/preset-default": "^12.0.0",
     "cookie-session": "^2.0.0-beta.3",
     "dotenv": "^16.0.0",
